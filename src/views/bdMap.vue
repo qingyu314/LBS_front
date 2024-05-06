@@ -157,9 +157,11 @@
       >
         <el-upload
             v-model:file-list="fileList"
-            action="http://192.168.137.1:9091/file/upload"
+            action="http://192.168.43.105:9091/secure/file/upload"
             list-type="picture-card"
             ref="uploadRef"
+            drag="true"
+            :headers="authHeaders"
             :on-preview="handlePictureCardPreview"
             :on-remove="handleRemove"
             :before-upload="beforeUpload"
@@ -259,6 +261,11 @@ const {get: getLoc, location, isLoading: isLoadingLoc, isError, status} = useBro
 const {get: getGeo, result, isLoading: isLoadingGeo, isEmpty} = usePointGeocoder<PointGeocoderResult>(null, () => {
   console.log(result.value)
 })
+
+let authHeaders = {
+  Authorization: sessionStorage.getItem("token")
+}
+
 let point = ref({lng: 116.30793520652882, lat: 40.05861561613348})
 const markerPoint = point
 

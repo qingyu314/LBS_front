@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const request = axios.create({
     // baseURL: 'http://192.168.137.211:9091',
-    baseURL: 'http://192.168.6.216:9091',
+    baseURL: 'http://192.168.43.105:9091',
     timeout: 5000
 });
 
