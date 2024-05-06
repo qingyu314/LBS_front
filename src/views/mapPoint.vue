@@ -23,7 +23,7 @@ const fits = [
 
  const url = ref('')
  const getImgSec = () => {
-   request.get('/file/image', {
+   request.get('/api/secure/image', {
      params:{
        imageId : 2
      },
