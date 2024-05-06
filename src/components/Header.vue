@@ -6,8 +6,7 @@
       <el-dropdown style="display: contents;">
           <span class="el-dropdown-link">
             <el-icon><UserFilled /></el-icon>
-<!--            {{ Name }}-->
-            ***
+            {{Name}}
             <el-icon class="el-icon--right">
               <arrow-down/>
             </el-icon>
@@ -28,12 +27,12 @@
       </el-dropdown>
     </div>
   </div>
+  <router-view></router-view>
 </template>
 <script lang="ts" setup>
 import {ArrowDown, Document, SwitchButton, UserFilled} from "@element-plus/icons-vue";
 
-// let Name = JSON.parse(sessionStorage.getItem("user")||{}).data.nickName;
-
+let Name = sessionStorage.getItem("username") == null ? "未登录" : sessionStorage.getItem("username")
 
 </script>
 

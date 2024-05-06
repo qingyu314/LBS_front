@@ -1,9 +1,7 @@
 <template>
-  <div style="width: 100%; height: 100vh;background: darkcyan; overflow: hidden">
-    <div style="width: 400px; margin: 150px auto">
-      <div style="color: #cccccc; font-size: 30px;text-align: center">
-        欢迎登录！
-      </div>
+  <div style="width: 100%; height: 100vh;background: aliceblue; overflow: hidden">
+    <div style="width: 400px; margin: 150px auto; display: flex; flex-direction: column; gap: 20px">
+      <el-text type="info" style="font-size: 30px;user-select: none">欢迎登录！</el-text>
       <el-form ref="formRef" :model="form" :rules="rules" label-width="auto" style="max-width: 600px">
         <el-form-item prop="username">
           <el-input v-model="form.username" :prefix-icon="User"/>
@@ -12,11 +10,12 @@
           <el-input v-model="form.password" :prefix-icon="Lock" show-password/>
         </el-form-item>
         <el-form-item>
-          <el-button style="width: 100%" type="primary" @click="login">登录</el-button>
+          <el-button type="primary" style="width: 100%" @click="login">登录</el-button>
         </el-form-item>
-        <el-form-item label="没有账号？">
-          <el-button style="width: 100%" type="primary" @click="$router.push('/register')">点击注册</el-button>
-        </el-form-item>
+        <div style="display: flex;justify-content: center;gap: 10px">
+          <el-text size="large" style="user-select: none">没有账号？</el-text>
+          <el-text size="large" tag="ins" style="cursor: pointer" @click="$router.push('/register')">点击注册</el-text>
+        </div>
       </el-form>
     </div>
   </div>
@@ -57,9 +56,10 @@ function login() {
             type: "success",
             message: "登录成功"
           })
-          sessionStorage.setItem("user", JSON.stringify(res))
+          sessionStorage.setItem("username", form.value.username)
+          sessionStorage.setItem("token", JSON.stringify(res.data.data))
           router.push({path: '/map'})
-          console.log(sessionStorage.getItem("user"))
+          console.log(sessionStorage.getItem("token"))
         } else {
           ElMessage({
             type: "error",
