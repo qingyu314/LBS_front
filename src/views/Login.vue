@@ -57,7 +57,7 @@ function login() {
             message: "登录成功"
           })
           sessionStorage.setItem("username", form.value.username)
-          sessionStorage.setItem("token", JSON.stringify(res.data.data))
+          sessionStorage.setItem("token", res.data.data)
           router.push({path: '/map'})
           console.log(sessionStorage.getItem("token"))
         } else {

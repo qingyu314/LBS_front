@@ -57,7 +57,7 @@ function register() {
         })
         return
       }
-      request.post("/member", form).then(res => {
+      request.post("/user/save", {username:form.username,password:form.password}).then(res => {
         if (res.data.code === '0') {
           ElMessage({
             type: "success",

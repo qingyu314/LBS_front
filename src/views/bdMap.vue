@@ -157,9 +157,11 @@
       >
         <el-upload
             v-model:file-list="fileList"
-            action="http://192.168.137.1:9091/file/upload"
+            action="http://192.168.43.105:9091/secure/file/upload"
             list-type="picture-card"
             ref="uploadRef"
+            drag="true"
+            :headers="authHeaders"
             :on-preview="handlePictureCardPreview"
             :on-remove="handleRemove"
             :before-upload="beforeUpload"
@@ -180,9 +182,9 @@
         </template>
 
       </el-dialog>
-      <el-drawer v-if="!isLoadingCard" v-model="drawer" title="贴图列表" :direction="'rtl'" style="width: 700px;">
+      <el-drawer v-if="!isLoadingCard" v-model="drawer" title="贴图列表" :direction="'rtl'" style="width: 1000px;">
 
-        <el-card v-for="item in cardList" style="max-width: 480px">
+        <el-card v-for="item in cardList" style="max-width: 600px">
           <el-form
               :label-position="labelPosition"
               label-width="auto"
@@ -199,7 +201,7 @@
               <el-text>{{ item.imageNum }}</el-text>
             </el-form-item>
             <el-form-item label="图片">
-              <el-image style="width: 100px; height: 100px" :src="item.imgUrl"/>
+              <el-image style="width: 400px;" :src="item.imgUrl"/>
             </el-form-item>
           </el-form>
         </el-card>
@@ -259,6 +261,11 @@ const {get: getLoc, location, isLoading: isLoadingLoc, isError, status} = useBro
 const {get: getGeo, result, isLoading: isLoadingGeo, isEmpty} = usePointGeocoder<PointGeocoderResult>(null, () => {
   console.log(result.value)
 })
+
+let authHeaders = {
+  Authorization: sessionStorage.getItem("token")
+}
+
 let point = ref({lng: 116.30793520652882, lat: 40.05861561613348})
 const markerPoint = point
 
@@ -380,32 +387,28 @@ const getImgSec = () => {
           cardList.value.push(cardForm)
           cnt++
         }
+      }).then(() => {
+        request.get('secure/file/image', {
+          params: {
+            imageId: resObj.id
+          },
+          responseType: 'blob'
+        }).then(res2 => {
+          const urlCreator = window.URL || window.webkitURL;
+          url.value = urlCreator.createObjectURL(res2.data);  // 创建一个临时URL用于图片显示
+          cardForm.imgUrl = url.value
+          console.log(url.value);
+          flag2 = true
+          if (flag1 && flag2) {
+            cardList.value.push(cardForm)
+            cnt++
+          }
+        })
       })
-      request.get('secure/file/image', {
-        params: {
-          imageId: resObj.id
-        },
-        responseType: 'blob'
-      }).then(res2 => {
-        const urlCreator = window.URL || window.webkitURL;
-        url.value = urlCreator.createObjectURL(res2.data);  // 创建一个临时URL用于图片显示
-        cardForm.imgUrl = url.value
-        console.log(url.value);
-        flag1 = true
-        if (flag1 && flag2) {
-          cardList.value.push(cardForm)
-          cnt++
-        }
-      })
-      if (cnt === res.data.length) {
-        isLoadingCard.value = false
-      }
     }
-
-
+    isLoadingCard.value = false
   })
-};
-
+}
 onMounted(() => {
   console.log(sessionStorage.getItem("username"))
 })
