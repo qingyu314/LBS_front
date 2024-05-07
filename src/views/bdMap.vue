@@ -232,11 +232,24 @@ import {
   type UploadProps,
   type UploadUserFile
 } from "element-plus";
-
-const type = ref<MapType>('BMAP_NORMAL_MAP')
-
+// 初始化-------------------------------------------------------------------------
+let authHeaders = {
+  Authorization: sessionStorage.getItem("token")
+}
 const map = ref()
-
+let mapSetting = ref<MapProps>({
+  enableDragging: false,
+  enableInertialDragging: true,
+  enableScrollWheelZoom: false,
+  enableContinuousZoom: true,
+  enableResizeOnCenter: true,
+  enableDoubleClickZoom: false,
+  enableKeyboard: true,
+  enablePinchToZoom: true,
+  enableAutoResize: true,
+  enableTraffic: false
+})
+const type = ref<MapType>('BMAP_NORMAL_MAP')
 const typeData = [
   {
     value: 'BMAP_NORMAL_MAP',
@@ -251,6 +264,8 @@ const typeData = [
     label: 'BMAP_SATELLITE_MAP',
   }
 ]
+// 浏览器定位
+let point = ref({lng: 116.30793520652882, lat: 40.05861561613348})
 const {get: getLoc, location, isLoading: isLoadingLoc, isError, status} = useBrowserLocation(null, () => {
   point.value = location.value.point
   getGeo(point.value)
@@ -258,35 +273,20 @@ const {get: getLoc, location, isLoading: isLoadingLoc, isError, status} = useBro
   console.log(point.value)
   map.value.resetCenter()
 })
-const {get: getGeo, result, isLoading: isLoadingGeo, isEmpty} = usePointGeocoder<PointGeocoderResult>(null, () => {
-  console.log(result.value)
-})
-
-let authHeaders = {
-  Authorization: sessionStorage.getItem("token")
-}
-
-let point = ref({lng: 116.30793520652882, lat: 40.05861561613348})
-const markerPoint = point
-
-let dialogVisible = ref(false)
-let mapSetting = ref<MapProps>({
-  enableDragging: false,
-  enableInertialDragging: true,
-  enableScrollWheelZoom: false,
-  enableContinuousZoom: true,
-  enableResizeOnCenter: true,
-  enableDoubleClickZoom: false,
-  enableKeyboard: true,
-  enablePinchToZoom: true,
-  enableAutoResize: true,
-  enableTraffic: false
-})
-
 function handleInitd() {
   getLoc()
 }
-
+// 标点----------------------------------------------------------------------------------------------------------------
+const markerPoint = point
+const dataForm = ref({
+  id: 1,
+  // id: Number(JSON.parse(sessionStorage.getItem("user")).data.userId),
+  latitude: markerPoint.value.lat,
+  longitude: markerPoint.value.lng
+});
+const {get: getGeo, result, isLoading: isLoadingGeo, isEmpty} = usePointGeocoder<PointGeocoderResult>(null, () => {
+  console.log(result.value)
+})
 function handleClick(e) {
   markerPoint.value = e.latlng
   console.log(markerPoint.value)
@@ -295,6 +295,9 @@ function handleClick(e) {
   getGeo(e.latlng)
 }
 
+
+// 添加贴图按钮--------------------------------------------------------------------------------------------
+let dialogVisible = ref(false)
 const form = ref({
   point: point.value,
   id: -1
@@ -307,22 +310,13 @@ const add = () => {
   }
 }
 
-//上传相关
+// 上传相关--------------------------------------------------------------------------------------------------
 const fileList = ref<UploadUserFile[]>([])
-const dataForm = ref({
-  id: 1,
-  // id: Number(JSON.parse(sessionStorage.getItem("user")).data.userId),
-  latitude: markerPoint.value.lat,
-  longitude: markerPoint.value.lng
-
-});
 const dialogImageUrl = ref('')
 const previewVisible = ref(false)
-
 const handleRemove: UploadProps['onRemove'] = (uploadFile, uploadFiles) => {
   console.log(uploadFile, uploadFiles)
 }
-
 const handlePictureCardPreview: UploadProps['onPreview'] = (uploadFile) => {
   dialogImageUrl.value = uploadFile.url!
   previewVisible.value = true
@@ -336,13 +330,12 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
 }
 
 const uploadRef = ref<UploadInstance>()
-
 const submitUpload = () => {
   console.log(fileList.value)
   uploadRef.value!.submit()
 }
 
-//一个范围内的贴图查询
+// 一个范围内的贴图查询-----------------------------------------------------------------------------------------------------------------
 let distance = ref(500000)
 const url = ref('')
 const drawer = ref(false)
