@@ -21,9 +21,6 @@
     <el-form-item label="用户名">
       <el-input v-model="form.username" disabled style="width: 80%"/>
     </el-form-item>
-    <el-form-item label="昵称">
-      <el-input v-model="form.nickName" style="width: 80%"/>
-    </el-form-item>
     <el-form-item label="密码">
       <el-input v-model="form.password" show-password style="width: 80%"/>
     </el-form-item>
@@ -45,23 +42,20 @@ import request from "@/utils/request";
 const imageUrl = ref('')
 
 let form = reactive({
-  id:'',
   username:'',
-  nickName:'',
   password:''
 
 })
 let formData = reactive({
-  userId:''
+  username:''
 })
 
-let str = sessionStorage.getItem("user") || "{}"
-form=JSON.parse(str).data
+let username = sessionStorage.getItem("username")
 getImgUrl()
 function getImgUrl(){
-  request.get("/api/user/"+form.id).then(res=>{
+  request.get("/api/secure/user/"+username).then(res=>{
     console.log(res);
-    formData.userId=form.id
+    formData.username=form.username
     imageUrl.value = "http://192.168.3.173:9090"+res.data[0].imag
     console.log(imageUrl.value)
   })
@@ -92,7 +86,7 @@ function update(){
         type: "success",
         message: "更新成功"
       })
-      sessionStorage.setItem("user", JSON.stringify(form))
+      sessionStorage.setItem("username", form.username)
     } else {
       ElMessage({
         type:"error",
