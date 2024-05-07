@@ -217,14 +217,14 @@
 <script lang="ts" setup>
 
 import {ChatDotSquare, Notification, Location, Plus} from "@element-plus/icons-vue";
-import {onMounted, ref} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {
   BMap,
   useBrowserLocation,
   type MapProps,
   type MapType,
   usePointGeocoder,
-  type PointGeocoderResult, BLocation, BLabel, BMarker, BCircle,
+  type PointGeocoderResult, BLocation, BLabel, BMarker, BCircle, usePointConvertor,
 } from "vue3-baidu-map-gl";
 import request from "@/utils/request";
 import {
@@ -265,33 +265,44 @@ const typeData = [
     label: 'BMAP_SATELLITE_MAP',
   }
 ]
-// 浏览器定位
+// 浏览器定位----------------------------------------------------------------------------------------------------------------
 let point = ref({lng: 116.30793520652882, lat: 40.05861561613348})
 const {get: getLoc, location, isLoading: isLoadingLoc, isError, status} = useBrowserLocation(null, () => {
-  point.value = location.value.point
-  getGeo(point.value)
-  markerPoint.value = point.value
-  console.log(point.value)
   map.value.resetCenter()
 })
 
 function handleInitd() {
   getLoc()
 }
+watch(location, (newLocation, oldLocation) => {
+  if (newLocation) {
+    point.value = newLocation.point
+    getGeo(newLocation.point)
+    markerPoint.value = newLocation.point
+    console.log(111)
+    console.log(markerPoint.value)
+  }
+})
 
 // 标点----------------------------------------------------------------------------------------------------------------
 const markerPoint = point
 const dataForm = ref({
   id: 1,
-  // id: Number(JSON.parse(sessionStorage.getItem("user")).data.userId),
+  // parseInt(sessionStorage.getItem("id"), 10),
   latitude: markerPoint.value.lat,
   longitude: markerPoint.value.lng
-});
+})
 const {get: getGeo, result, isLoading: isLoadingGeo, isEmpty} = usePointGeocoder<PointGeocoderResult>(null, () => {
   console.log(result.value)
 })
 
 function handleClick(e) {
+  dataForm.value = {
+    id: 1,
+    // parseInt(sessionStorage.getItem("id"), 10),
+    latitude: markerPoint.value.lat,
+    longitude: markerPoint.value.lng
+  }
   markerPoint.value = e.latlng
   console.log(markerPoint.value)
   dataForm.value.latitude = markerPoint.value.lat
@@ -310,7 +321,7 @@ const add = () => {
   dialogVisible.value = true;
   form.value = {
     point: point.value,
-    id: 1
+    id: parseInt(sessionStorage.getItem("id"), 10)
   }
 }
 
@@ -340,7 +351,7 @@ const submitUpload = () => {
 }
 
 // 一个范围内的贴图查询-----------------------------------------------------------------------------------------------------------------
-let distance = ref(500000)
+let distance = ref(1000)
 const url = ref('')
 const drawer = ref(false)
 const cardList = ref([])
@@ -406,6 +417,9 @@ const getImgSec = () => {
     isLoadingCard.value = false
   })
 }
+//坐标转换
+const { result:resConv, convert, isLoading:isLoadConv, isError:isErrConv, status:stConv } = usePointConvertor()
+
 onMounted(() => {
   console.log(sessionStorage.getItem("username"))
 })
