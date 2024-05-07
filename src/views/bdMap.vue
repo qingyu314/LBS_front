@@ -183,28 +183,29 @@
 
       </el-dialog>
       <el-drawer v-if="!isLoadingCard" v-model="drawer" title="贴图列表" :direction="'rtl'" style="width: 1000px;">
-
-        <el-card v-for="item in cardList" style="max-width: 600px">
-          <el-form
-              :label-position="labelPosition"
-              label-width="auto"
-              :model="item"
-              style="max-width: 600px"
-          >
-            <el-form-item label="Name">
-              <el-text>{{ item.username }}</el-text>
-            </el-form-item>
-            <el-form-item label="介绍">
-              <el-text>{{ item.introduction }}</el-text>
-            </el-form-item>
-            <el-form-item label="表单">
-              <el-text>{{ item.imageNum }}</el-text>
-            </el-form-item>
-            <el-form-item label="图片">
-              <el-image style="width: 400px;" :src="item.imgUrl"/>
-            </el-form-item>
-          </el-form>
-        </el-card>
+        <div style="display: flex;flex-direction: column;gap: 20px">
+          <el-card v-for="item in cardList" style="max-width: 600px">
+            <el-form
+                :label-position="labelPosition"
+                label-width="auto"
+                :model="item"
+                style="max-width: 600px"
+            >
+              <el-form-item label="Name">
+                <el-text>{{ item.username }}</el-text>
+              </el-form-item>
+              <el-form-item label="介绍">
+                <el-text>{{ item.introduction }}</el-text>
+              </el-form-item>
+              <el-form-item label="表单">
+                <el-text>{{ item.imageNum }}</el-text>
+              </el-form-item>
+              <el-form-item label="图片">
+                <el-image style="width: 400px;" :src="item.imgUrl"/>
+              </el-form-item>
+            </el-form>
+          </el-card>
+        </div>
       </el-drawer>
       <el-drawer v-else v-model="drawer" title="贴图列表" :direction="'rtl'" style="width: 700px;">
         <span>加载中...</span>
@@ -273,9 +274,11 @@ const {get: getLoc, location, isLoading: isLoadingLoc, isError, status} = useBro
   console.log(point.value)
   map.value.resetCenter()
 })
+
 function handleInitd() {
   getLoc()
 }
+
 // 标点----------------------------------------------------------------------------------------------------------------
 const markerPoint = point
 const dataForm = ref({
@@ -287,6 +290,7 @@ const dataForm = ref({
 const {get: getGeo, result, isLoading: isLoadingGeo, isEmpty} = usePointGeocoder<PointGeocoderResult>(null, () => {
   console.log(result.value)
 })
+
 function handleClick(e) {
   markerPoint.value = e.latlng
   console.log(markerPoint.value)
