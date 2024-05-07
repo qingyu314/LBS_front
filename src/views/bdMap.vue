@@ -75,7 +75,7 @@
       <br />
       <span>定位精度 - {{ location.accuracy }}m</span>
     </div>
-    <div class="state" v-else-if="isError">
+    <div class="state" v-else-if="isError && isErrConv">
       <el-text size="large" type="danger">
         出错了，{{ status }}
       </el-text>
@@ -125,7 +125,7 @@
         @initd="handleInitd"
         @click="handleClick"
     >
-      <template v-if="!isLoadingLoc">
+      <template v-if="!isLoadingLoc && isLoadConv">
         <BMarker :position="location.point"></BMarker>
         <BCircle
             strokeStyle="solid"
@@ -148,7 +148,6 @@
           }`"
         />
       </template>
-      <BLocation />
     </BMap>
     <el-dialog
       v-model="dialogVisible"
@@ -209,7 +208,6 @@
 </template>
 
 <script lang="ts" setup>
-
 import {ChatDotSquare, Notification, Location, Plus} from "@element-plus/icons-vue";
 import {onMounted, ref} from "vue";
 import {
@@ -218,7 +216,8 @@ import {
   type MapProps,
   type MapType,
   usePointGeocoder,
-  type PointGeocoderResult, BLocation, BLabel, BMarker, BCircle,
+  CoordinatesFromType, CoordinatesToType, usePointConvertor,
+  type PointGeocoderResult, BLocation, BLabel, BMarker, BCircle, BInfoWindow,
 } from "vue3-baidu-map-gl";
 import request from "@/utils/request";
 import {
@@ -228,10 +227,26 @@ import {
   type UploadUserFile
 } from "element-plus";
 
-const type = ref<MapType>('BMAP_NORMAL_MAP')
-
+//初始化------------------------------------------------------------------------------------------------
 const map = ref()
+let mapSetting = ref<MapProps>({
+  enableDragging: true,
+  enableInertialDragging: true,
+  enableScrollWheelZoom: false,
+  enableContinuousZoom: true,
+  enableResizeOnCenter: true,
+  enableDoubleClickZoom: false,
+  enableKeyboard: true,
+  enablePinchToZoom: true,
+  enableAutoResize: true,
+  enableTraffic: false
+})
+function handleInitd() {
+  getLoc()
+}
 
+//地图模式-------------------------------------------------------------------------------------------------
+const type = ref<MapType>('BMAP_NORMAL_MAP')
 const typeData = [
   {
     value: 'BMAP_NORMAL_MAP',
@@ -246,8 +261,13 @@ const typeData = [
     label: 'BMAP_SATELLITE_MAP',
   }
 ]
+
+//浏览器定位-------------------------------------------------------------------------------------------------------------
+let point = ref({ lng: 116.30793520652882, lat: 40.05861561613348 })
 const { get: getLoc, location, isLoading: isLoadingLoc, isError, status } = useBrowserLocation(null, () => {
-  point.value=location.value.point
+  convert([location.value.point], CoordinatesFromType['COORDINATES_GCJ02'], CoordinatesToType['COORDINATES_BD09'])
+
+  point.value=resConv.value?resConv.value[0]:location.value.point
   getGeo(point.value)
   markerPoint.value = point.value
   console.log(111)
@@ -257,26 +277,16 @@ const { get: getLoc, location, isLoading: isLoadingLoc, isError, status } = useB
 const { get: getGeo, result, isLoading: isLoadingGeo, isEmpty } = usePointGeocoder<PointGeocoderResult>(null, () => {
   console.log(result.value)
 })
-let point = ref({ lng: 116.30793520652882, lat: 40.05861561613348 })
+
+// 单击标点---------------------------------------------------------------------------------------------------------------------
 const markerPoint = point
+const dataForm = ref({
+  id: 1,
+  // id: Number(JSON.parse(sessionStorage.getItem("user")).data.userId),
+  latitude: markerPoint.value.lat,
+  longitude: markerPoint.value.lng
 
-let dialogVisible=ref(false)
-let mapSetting = ref<MapProps>({
-  enableDragging: false,
-  enableInertialDragging: true,
-  enableScrollWheelZoom: false,
-  enableContinuousZoom: true,
-  enableResizeOnCenter: true,
-  enableDoubleClickZoom: false,
-  enableKeyboard: true,
-  enablePinchToZoom: true,
-  enableAutoResize: true,
-  enableTraffic: false
-})
-
-function handleInitd() {
-  getLoc()
-}
+});
 function handleClick(e) {
   markerPoint.value = e.latlng
   console.log(markerPoint.value)
@@ -285,10 +295,12 @@ function handleClick(e) {
   getGeo(e.latlng)
 }
 
+// 添加贴图----------------------------------------------------------------------------------------------------------
 const form = ref({
   point:point.value,
   id: -1
 })
+const dialogVisible=ref(false)
 const add=()=>{
   dialogVisible.value=true;
   form.value={
@@ -297,26 +309,14 @@ const add=()=>{
   }
 }
 
-//上传相关
+// 上传相关-----------------------------------------------------------------------------------------------------------
 const fileList = ref<UploadUserFile[]>([])
-const dataForm = ref({
-  id: 1,
-  // id: Number(JSON.parse(sessionStorage.getItem("user")).data.userId),
-  latitude: markerPoint.value.lat,
-  longitude: markerPoint.value.lng
-
-});
 const dialogImageUrl = ref('')
-const previewVisible = ref(false)
 
 const handleRemove: UploadProps['onRemove'] = (uploadFile, uploadFiles) => {
   console.log(uploadFile, uploadFiles)
 }
 
-const handlePictureCardPreview: UploadProps['onPreview'] = (uploadFile) => {
-  dialogImageUrl.value = uploadFile.url!
-  previewVisible.value = true
-}
 const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
   if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png' && rawFile.type !== 'image/bmp' && rawFile.type !== 'image/gif') {
     ElMessage.error('上传的图片必须要是 JPG/PNG/BMP/GIF 格式!')
@@ -332,8 +332,15 @@ const submitUpload = () => {
   uploadRef.value!.submit()
 }
 
-//一个范围内的贴图查询
-let distance = ref(500000)
+// 图片预览------------------------------------------------------------------------------------------------------------------------
+const previewVisible = ref(false)
+const handlePictureCardPreview: UploadProps['onPreview'] = (uploadFile) => {
+  dialogImageUrl.value = uploadFile.url!
+  previewVisible.value = true
+}
+
+// 一个范围内的贴图查询------------------------------------------------------------------------------------------------
+let distance = ref(5000)
 const url = ref('')
 const drawer = ref(false)
 const cardList = ref([])
@@ -399,6 +406,9 @@ const getImgSec = () => {
 
   })
 };
+
+//坐标转换
+const { convert, result:resConv, isLoading:isLoadConv, isError:isErrConv } = usePointConvertor()
 
 onMounted(()=>{
   console.log(sessionStorage.getItem("user"))
