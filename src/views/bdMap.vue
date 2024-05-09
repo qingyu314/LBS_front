@@ -148,13 +148,46 @@
           }`"
           />
         </template>
-        <BLocation/>
+        <BMarker
+            v-for="(item, index) in cardList"
+            :position="item.position"
+            :icon="`blue${index + 1}`"
+            @click="() => clickDot(item)"
+            enableClicking
+        />
+        <BInfoWindow
+
+            v-model:show="show"
+            :position="position"
+            enableAutoPan
+            enableCloseOnClick
+            :offset="{
+        x: 0,
+        y: -10
+      }"
+        >
+          <el-form label-width="auto" style="max-width: 600px">
+            <el-form-item label="Name">
+              <el-text @click="">{{ showItem.username }}</el-text>
+            </el-form-item>
+            <el-form-item label="评论">
+              <el-text>{{ showItem.comment }}</el-text>
+            </el-form-item>
+            <el-form-item label="图片">
+              <el-image style="width: 400px;" :src="showItem.imgUrl"/>
+            </el-form-item>
+          </el-form>
+
+        </BInfoWindow>
       </BMap>
       <el-dialog
           v-model="dialogVisible"
           title="上传贴图"
           width="50%"
       >
+        <el-form-item label="评论">
+          <el-input placeholder="请输入您的评论" type="textarea" v-model="dataForm.comment" />
+        </el-form-item>
         <el-upload
             v-model:file-list="fileList"
             action="http://192.168.43.105:9091/secure/file/upload"
@@ -217,14 +250,21 @@
 <script lang="ts" setup>
 
 import {ChatDotSquare, Notification, Location, Plus} from "@element-plus/icons-vue";
-import {onMounted, ref, watch} from "vue";
+import {onMounted, ref, watch, type UnwrapRef} from "vue";
 import {
   BMap,
   useBrowserLocation,
   type MapProps,
   type MapType,
   usePointGeocoder,
-  type PointGeocoderResult, BLocation, BLabel, BMarker, BCircle, usePointConvertor,
+  type PointGeocoderResult,
+  BLocation,
+  BLabel,
+  BMarker,
+  BCircle,
+  usePointConvertor,
+  CoordinatesToType,
+  CoordinatesFromType, BInfoWindow,
 } from "vue3-baidu-map-gl";
 import request from "@/utils/request";
 import {
@@ -274,15 +314,7 @@ const {get: getLoc, location, isLoading: isLoadingLoc, isError, status} = useBro
 function handleInitd() {
   getLoc()
 }
-watch(location, (newLocation, oldLocation) => {
-  if (newLocation) {
-    point.value = newLocation.point
-    getGeo(newLocation.point)
-    markerPoint.value = newLocation.point
-    console.log(111)
-    console.log(markerPoint.value)
-  }
-})
+
 
 // 标点----------------------------------------------------------------------------------------------------------------
 const markerPoint = point
@@ -290,39 +322,39 @@ const dataForm = ref({
   id: 1,
   // parseInt(sessionStorage.getItem("id"), 10),
   latitude: markerPoint.value.lat,
-  longitude: markerPoint.value.lng
+  longitude: markerPoint.value.lng,
+  comment: ''
 })
 const {get: getGeo, result, isLoading: isLoadingGeo, isEmpty} = usePointGeocoder<PointGeocoderResult>(null, () => {
   console.log(result.value)
 })
 
 function handleClick(e) {
-  dataForm.value = {
-    id: 1,
-    // parseInt(sessionStorage.getItem("id"), 10),
-    latitude: markerPoint.value.lat,
-    longitude: markerPoint.value.lng
-  }
   markerPoint.value = e.latlng
   console.log(markerPoint.value)
   dataForm.value.latitude = markerPoint.value.lat
   dataForm.value.longitude = markerPoint.value.lng
   getGeo(e.latlng)
 }
-
-
-// 添加贴图按钮--------------------------------------------------------------------------------------------
-let dialogVisible = ref(false)
-const form = ref({
-  point: point.value,
-  id: -1
+// 坐标转换-----------------------------------------------------------------------------------------------------------
+const { result:resConv, convert, isLoading:isLoadConv, isError:isErrConv, status:stConv } = usePointConvertor()
+// 监视------------------------------------------------------------------------------------------------------------
+watch(location, (newLocation, oldLocation) => {
+  if (newLocation) {
+    console.log(2)
+    console.log(newLocation.point)
+    point.value = newLocation.point
+    getGeo(newLocation.point)
+    markerPoint.value = newLocation.point
+    console.log(111)
+    console.log(markerPoint.value)
+  }
 })
+// 添加贴图按钮--------------------------------------------------------------------------------------------
+// 注意：这里的form可能要删除，功能可能和dataForm重合
+let dialogVisible = ref(false)
 const add = () => {
   dialogVisible.value = true;
-  form.value = {
-    point: point.value,
-    id: parseInt(sessionStorage.getItem("id"), 10)
-  }
 }
 
 // 上传相关--------------------------------------------------------------------------------------------------
@@ -379,19 +411,25 @@ const getImgSec = () => {
       let resObj = res.data[i];
       let cardForm = {
         username: '',
+        comment: '',
         introduction: '',
         imageNum: 0,
-        imgUrl: ''
+        imgUrl: '',
+        position: {lat: 0, lng: 0},
       }
       let flag1 = false
       let flag2 = false
+      let flag3 = false
       let cnt = 0
 
       request.get('secure/user/' + res.data[i].userId).then((res1) => {
         console.log(res1.data)
-        cardForm = res1.data
+        cardForm.username = res1.data.username
+        cardForm.introduction = res1.data.introduction
+        cardForm.imageNum = res1.data.imageNum
+        cardForm.position = {lat: res1.data.latitude, lng: res1.data.longitude}
         flag1 = true
-        if (flag1 && flag2) {
+        if (flag1 && flag2 && flag3) {
           cardList.value.push(cardForm)
           cnt++
         }
@@ -407,18 +445,46 @@ const getImgSec = () => {
           cardForm.imgUrl = url.value
           console.log(url.value);
           flag2 = true
-          if (flag1 && flag2) {
+
+          if (flag1 && flag2 && flag3) {
             cardList.value.push(cardForm)
             cnt++
           }
+        }).then(()=>{
+            request.get('secure/comment',{
+              params: {
+                imageid: resObj.id
+              }
+            }).then((res3)=>{
+              cardForm.comment = res3.data
+              if (flag1 && flag2 && flag3) {
+                cardList.value.push(cardForm)
+                cnt++
+              }
+            })
         })
       })
     }
     isLoadingCard.value = false
   })
 }
-//坐标转换
-const { result:resConv, convert, isLoading:isLoadConv, isError:isErrConv, status:stConv } = usePointConvertor()
+// 在地图上显示贴图卡片----------------------------------------------------------------------------------------------------
+const position = ref(cardList.value[0].position)
+const show = ref<boolean>(false)
+const showItem = ref({
+  username: '',
+  comment: '',
+  introduction: '',
+  imageNum: 0,
+  imgUrl: '',
+  position: {lat: 0, lng: 0},
+})
+function clickDot(item: UnwrapRef<typeof cardList>[0]) {
+  position.value = item.position
+  showItem.value = JSON.parse(JSON.stringify(item))
+  if(!show.value) show.value = true
+}
+//
 
 onMounted(() => {
   console.log(sessionStorage.getItem("username"))
