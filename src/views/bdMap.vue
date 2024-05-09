@@ -15,7 +15,7 @@
           </el-menu-item>
 
           <el-menu-item index="3">
-            <el-button type="info" plain :icon="ChatDotSquare" @click="cmtShow">查看贴图</el-button>
+            <el-button type="info" plain :icon="ChatDotSquare" @click="dotShow">查看贴图</el-button>
           </el-menu-item>
           <el-menu-item>
             <el-checkbox v-model="mapSetting.enableScrollWheelZoom" label="鼠标缩放"/>
@@ -168,7 +168,7 @@
         >
           <el-form label-width="auto" style="max-width: 600px">
             <el-form-item label="Name">
-              <el-text @click="">{{ showItem.username }}</el-text>
+              <el-text @click="jumpUser">{{ showItem.username }}</el-text>
             </el-form-item>
             <el-form-item label="评论">
               <el-text>{{ showItem.comment }}</el-text>
@@ -215,34 +215,6 @@
         </template>
 
       </el-dialog>
-      <el-drawer v-if="!isLoadingCard" v-model="drawer" title="贴图列表" :direction="'rtl'" style="width: 1000px;">
-        <div style="display: flex;flex-direction: column;gap: 20px">
-          <el-card v-for="item in cardList" style="max-width: 600px">
-            <el-form
-                :label-position="labelPosition"
-                label-width="auto"
-                :model="item"
-                style="max-width: 600px"
-            >
-              <el-form-item label="Name">
-                <el-text>{{ item.username }}</el-text>
-              </el-form-item>
-              <el-form-item label="介绍">
-                <el-text>{{ item.introduction }}</el-text>
-              </el-form-item>
-              <el-form-item label="表单">
-                <el-text>{{ item.imageNum }}</el-text>
-              </el-form-item>
-              <el-form-item label="图片">
-                <el-image style="width: 400px;" :src="item.imgUrl"/>
-              </el-form-item>
-            </el-form>
-          </el-card>
-        </div>
-      </el-drawer>
-      <el-drawer v-else v-model="drawer" title="贴图列表" :direction="'rtl'" style="width: 700px;">
-        <span>加载中...</span>
-      </el-drawer>
     </div>
   </div>
 </template>
@@ -273,6 +245,7 @@ import {
   type UploadProps,
   type UploadUserFile
 } from "element-plus";
+import router from "@/router";
 // 初始化-------------------------------------------------------------------------
 let authHeaders = {
   Authorization: sessionStorage.getItem("token")
@@ -385,14 +358,10 @@ const submitUpload = () => {
 // 一个范围内的贴图查询-----------------------------------------------------------------------------------------------------------------
 let distance = ref(1000)
 const url = ref('')
-const drawer = ref(false)
 const cardList = ref([])
 const labelPosition = ref<FormProps['labelPosition']>('left')
-const isLoadingCard = ref(false)
-const cmtShow = () => {
-  drawer.value = true
+const dotShow = () => {
   getImgSec()
-  form.value
 }
 const getImgSec = () => {
   cardList.value = []
@@ -403,17 +372,16 @@ const getImgSec = () => {
       radius: distance.value
     },
   }).then(res => {
-    if (res.data.length > 0) {
-      isLoadingCard.value = true
-    }
+    // if (res.data.length > 0) {
+    //   isLoadingCard.value = true
+    // }
     console.log(res.data)
     for (let i = 0; i < res.data.length; i++) {
       let resObj = res.data[i];
       let cardForm = {
+        userId: resObj.userId,
         username: '',
         comment: '',
-        introduction: '',
-        imageNum: 0,
         imgUrl: '',
         position: {lat: 0, lng: 0},
       }
@@ -425,8 +393,6 @@ const getImgSec = () => {
       request.get('secure/user/' + res.data[i].userId).then((res1) => {
         console.log(res1.data)
         cardForm.username = res1.data.username
-        cardForm.introduction = res1.data.introduction
-        cardForm.imageNum = res1.data.imageNum
         cardForm.position = {lat: res1.data.latitude, lng: res1.data.longitude}
         flag1 = true
         if (flag1 && flag2 && flag3) {
@@ -451,7 +417,7 @@ const getImgSec = () => {
             cnt++
           }
         }).then(()=>{
-            request.get('secure/comment',{
+            request.get('secure/comments',{
               params: {
                 imageid: resObj.id
               }
@@ -465,17 +431,22 @@ const getImgSec = () => {
         })
       })
     }
-    isLoadingCard.value = false
+  }).then(()=>{
+    console.log(333)
+    if(cardList.value.length > 0) {
+      position.value = cardList.value[0].position
+      console.log(cardList.value)
+    }
+    else console.log(0)
   })
+
 }
 // 在地图上显示贴图卡片----------------------------------------------------------------------------------------------------
-const position = ref(cardList.value[0].position)
+const position = ref()
 const show = ref<boolean>(false)
 const showItem = ref({
   username: '',
   comment: '',
-  introduction: '',
-  imageNum: 0,
   imgUrl: '',
   position: {lat: 0, lng: 0},
 })
@@ -484,7 +455,15 @@ function clickDot(item: UnwrapRef<typeof cardList>[0]) {
   showItem.value = JSON.parse(JSON.stringify(item))
   if(!show.value) show.value = true
 }
-//
+// 跳转到用户详情页
+function jumpUser(id: number) {
+  if(id == parseInt(sessionStorage.getItem("id"), 10)) {
+    router.push('/info')
+  }
+  else{
+    router.push('userDetail?id=' + id)
+  }
+}
 
 onMounted(() => {
   console.log(sessionStorage.getItem("username"))

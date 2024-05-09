@@ -5,6 +5,7 @@ import Info from "@/views/Info.vue";
 import bdMap from "@/views/bdMap.vue";
 import mapPoint from "@/views/mapPoint.vue";
 import Header from "@/components/Header.vue";
+import userDetail from "@/views/userDetail.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -41,6 +42,11 @@ const router = createRouter({
             path: "/info",
             name: "info",
             component: Info
+        },
+        {
+            path: "/userDetail",
+            name: "userDetail",
+            component: userDetail
         }
     ]
 })
