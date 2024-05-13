@@ -372,9 +372,6 @@ const getImgSec = () => {
       radius: distance.value
     },
   }).then(res => {
-    // if (res.data.length > 0) {
-    //   isLoadingCard.value = true
-    // }
     console.log(res.data)
     for (let i = 0; i < res.data.length; i++) {
       let resObj = res.data[i];
@@ -395,10 +392,10 @@ const getImgSec = () => {
         cardForm.username = res1.data.username
         cardForm.position = {lat: res1.data.latitude, lng: res1.data.longitude}
         flag1 = true
-        if (flag1 && flag2 && flag3) {
-          cardList.value.push(cardForm)
-          cnt++
-        }
+        // if (flag1 && flag2 && flag3) {
+        //   cardList.value.push(cardForm)
+        //   cnt++
+        // }
       }).then(() => {
         request.get('secure/file/image', {
           params: {
@@ -411,13 +408,12 @@ const getImgSec = () => {
           cardForm.imgUrl = url.value
           console.log(url.value);
           flag2 = true
-
-          if (flag1 && flag2 && flag3) {
-            cardList.value.push(cardForm)
-            cnt++
-          }
+          // if (flag1 && flag2 && flag3) {
+          //   cardList.value.push(cardForm)
+          //   cnt++
+          // }
         }).then(()=>{
-            request.get('secure/comments',{
+            request.get('secure/file/comments',{
               params: {
                 imageid: resObj.id
               }
