@@ -1,129 +1,199 @@
 <template>
-  <el-card style="width: 80%; margin: 10px 10% auto auto">
-    <template #header>
-      <div class="card-header">
-        <span>个人信息</span>
+  <div style="width: 100%; height: 100vh; background: aliceblue; overflow: hidden;">
+    <el-card style="width: 60%; margin: 20px auto;">
+      <div class="profile-card">
+        <div class="profile-header">
+          <img class="cover-photo" src="/public/profile.png" alt="Cover Photo" />
+        </div>
+        <div class="profile-content">
+          <el-icon :size="80">
+            <User />
+          </el-icon>
+          <div class="user-info">
+            <h1 class="username">{{ form.username }}</h1>
+            <span>{{ form.introduction || '暂无个人介绍' }}</span>
+          </div>
+          <el-button type="primary" @click="edit">编辑个人资料</el-button>
+        </div>
+        <div v-if="editing" class="edit-form">
+          <el-form-item label="用户名" class="form-item">
+            <el-input v-model="form.username" class="input-right" />
+          </el-form-item>
+          <el-form-item label="原密码" class="form-item">
+            <el-input v-model="form.oldPassword" show-password class="input-right" />
+          </el-form-item>
+          <el-form-item label="新密码" class="form-item">
+            <el-input v-model="form.password" show-password class="input-right" :disabled="!form.oldPassword" />
+          </el-form-item>
+          <el-form-item label="确认新密码" class="form-item">
+            <el-input v-model="form.confirmPassword" show-password class="input-right" :disabled="!form.oldPassword" />
+          </el-form-item>
+          <el-form-item label="个人介绍" class="form-item">
+            <el-input v-model="form.introduction" class="input-right" />
+          </el-form-item>
+          <div class="form-actions">
+            <el-button type="primary" @click="update">保存</el-button>
+            <el-button @click="cancel">取消</el-button>
+          </div>
+        </div>
       </div>
-    </template>
-    <el-form-item>
-      <el-upload
-          class="avatar-uploader"
-          action="/files/upload"
-          :show-file-list="false"
-          :data="formData"
-          :on-success="handleAvatarSuccess"
-          :before-upload="beforeAvatarUpload"
-      >
-        <img v-if="imageUrl" :src="imageUrl" class="avatar" />
-        <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-      </el-upload>
-    </el-form-item>
-    <el-form-item label="用户名">
-      <el-input v-model="form.username" disabled style="width: 80%"/>
-    </el-form-item>
-    <el-form-item label="密码">
-      <el-input v-model="form.password" show-password style="width: 80%"/>
-    </el-form-item>
-    <div style="text-align: center">
-      <el-button type="primary" @click="update">保存</el-button>
-    </div>
-  </el-card>
-
+    </el-card>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import {reactive, ref} from 'vue'
-import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
-
-import type { UploadProps } from 'element-plus'
+import { User } from "@element-plus/icons-vue";
+import { reactive, ref, onMounted } from 'vue';
+import { ElMessage } from 'element-plus';
 import request from "@/utils/request";
 
-const imageUrl = ref('')
-
+let editing = ref(false);
 let form = reactive({
-  username:'',
-  password:''
+  id: sessionStorage.getItem("id"), // 假设用户ID存储在sessionStorage中
+  username: sessionStorage.getItem("username"),
+  oldPassword: '',
+  password: '',
+  confirmPassword: '',
+  introduction: ''
+});
 
-})
-let formData = reactive({
-  username:''
-})
+onMounted(() => {
+  const userId = sessionStorage.getItem("id");
+  request.get(`/secure/user/${userId}`).then(res => {
+    if (res.data) {
+      form.introduction = res.data.introduction;
+      sessionStorage.setItem("introduction", form.introduction);
+    } else {
+      ElMessage({
+        type: "error",
+        message: res.data.msg
+      });
+    }
+  });
+});
 
-let username = sessionStorage.getItem("username")
-getImgUrl()
-function getImgUrl(){
-  request.get("/api/secure/user/"+username).then(res=>{
-    console.log(res);
-    formData.username=form.username
-    imageUrl.value = "http://192.168.3.173:9090"+res.data[0].imag
-    console.log(imageUrl.value)
-  })
+function edit() {
+  editing.value = true;
 }
-const handleAvatarSuccess: UploadProps['onSuccess'] = (
-    response,
-    uploadFile
-) => {
-  imageUrl.value = URL.createObjectURL(uploadFile.raw!)
+
+function cancel() {
+  editing.value = false;
+  form.oldPassword = '';
+  form.password = '';
+  form.confirmPassword = '';
 }
 
-const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
-  if (rawFile.type !== 'image/jpeg') {
-    ElMessage.error('Avatar picture must be JPG format!')
-    return false
-  } else if (rawFile.size / 1024 / 1024 > 2) {
-    ElMessage.error('Avatar picture size can not exceed 2MB!')
-    return false
+function update() {
+  const storedPassword = sessionStorage.getItem("password");
+
+  if (form.oldPassword && form.oldPassword !== storedPassword) {
+    ElMessage({
+      type: "error",
+      message: "原密码不正确"
+    });
+    return;
   }
-  return true
-}
 
-function update(){
-  request.put("/user", form).then(res => {
-    console.log(res)
-    if(res.data.code === '0'){
+  if (form.oldPassword && form.password !== form.confirmPassword) {
+    ElMessage({
+      type: "error",
+      message: "两次输入的新密码不一致"
+    });
+    return;
+  }
+
+  const userUpdate = {
+    id: form.id,
+    username: form.username,
+    introduction: form.introduction
+  };
+
+  if (form.oldPassword && form.password) {
+    userUpdate.password = form.password;
+  }
+
+  request.put("/secure/user/updateuser", userUpdate).then(res => {
+    if (res.data.code === '0') {
       ElMessage({
         type: "success",
         message: "更新成功"
-      })
-      sessionStorage.setItem("username", form.username)
+      });
+      sessionStorage.setItem("username", form.username);
+      if (form.password) {
+        sessionStorage.setItem("password", form.password);
+      }
+      editing.value = false;
+      form.oldPassword = '';
+      form.password = '';
+      form.confirmPassword = '';
     } else {
       ElMessage({
-        type:"error",
-        message:res.data.msg
-      })
+        type: "error",
+        message: res.data.msg
+      });
     }
-  })
+  });
 }
 </script>
 
 <style scoped>
-.avatar-uploader .avatar {
-  width: 178px;
-  height: 178px;
-  display: block;
+.profile-card {
+  width: 100%;
 }
-</style>
 
-<style>
-.avatar-uploader .el-upload {
-  border: 1px dashed var(--el-border-color);
-  border-radius: 6px;
-  cursor: pointer;
+.profile-header {
   position: relative;
-  overflow: hidden;
-  transition: var(--el-transition-duration-fast);
+  height: 350px;
+  background-color: #ccc;
 }
 
-.avatar-uploader .el-upload:hover {
-  border-color: var(--el-color-primary);
+.cover-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.el-icon.avatar-uploader-icon {
-  font-size: 28px;
-  color: #8c939d;
-  width: 178px;
-  height: 178px;
+.upload-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.profile-content {
+  display: flex;
+  align-items: flex-end;
+  padding: 20px;
+}
+
+.user-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  gap: 10px;
+}
+
+.username {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.edit-form {
+  padding: 20px;
+}
+
+.form-item {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.input-right input {
+  text-align: right;
+}
+
+.form-actions {
   text-align: center;
+  margin-top: 20px;
 }
 </style>

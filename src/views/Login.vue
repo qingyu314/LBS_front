@@ -63,7 +63,8 @@ function login() {
               return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
           }).join(''));
           sessionStorage.setItem("id", JSON.parse(jsonPayload).id)
-          sessionStorage.setItem("username", JSON.parse(jsonPayload).username)
+          sessionStorage.setItem("username", JSON.parse(jsonPayload).userName)
+          sessionStorage.setItem("password", form.value.password)
           router.push({path: '/map'})
         } else {
           ElMessage({
