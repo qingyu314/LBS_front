@@ -1,21 +1,27 @@
 <template>
-  <div style="height:50px; line-height: 50px; border-bottom: 1px solid #ccc; display: flex;">
+  <header class="app-header">
     <el-text type="primary"
-             style="width: 200px; padding-left: 30px; font-size: 20px; font-weight: bold; user-select: none">用 户 操 作
+             style="width: 150px; padding-left: 30px; font-size: 30px; font-weight: bold; user-select: none">诗 远 行
     </el-text>
+    <nav class="nav">
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a class="nav-link" href="/map">首页</a>
+        </li>
+      </ul>
+    </nav>
     <div style="flex: 1;"></div>
     <div style="width: 130px;margin:auto">
       <el-dropdown style="display: contents;">
           <div class="el-dropdown-link" style="display: flex;justify-content: center;gap: 6px">
-            <el-icon><UserFilled/></el-icon>
-            <el-text style="user-select: none">
+            <el-icon size="18px"><UserFilled/></el-icon>
+            <el-text style="user-select: none;font-size: 18px">
             {{ Name }}
             </el-text>
-            <el-icon><arrow-down/></el-icon>
+            <el-icon size="18px" ><arrow-down/></el-icon>
           </div>
         <template #dropdown>
           <el-dropdown-menu>
-
             <el-dropdown-item @click="$router.push('/info')">
               <el-icon class="el-icon--left">
                 <document/>
@@ -32,7 +38,7 @@
         </template>
       </el-dropdown>
     </div>
-  </div>
+  </header>
   <router-view></router-view>
 </template>
 <script lang="ts" setup>
@@ -43,5 +49,43 @@ let Name = sessionStorage.getItem("username") == null ? "未登录" : sessionSto
 </script>
 
 <style scoped>
+.app-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: white;
+  border-bottom: 1px solid #eaeaea;
+}
 
+.nav {
+  width: 100px;
+  display: flex;
+  justify-content: center;
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  margin-right: 20px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #666;
+  font-size: 18px;
+}
+
+.nav-link:hover {
+  color: #000;
+}
+
+.nav-link:focus,
+.nav-link:active {
+  color: #000;
+}
 </style>

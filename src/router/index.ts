@@ -32,6 +32,11 @@ const router = createRouter({
                     name: 'mapPoint',
                     component: mapPoint
                 },
+                {
+                    path: "/info",
+                    name: "info",
+                    component: Info
+                },
             ]
         },
         {
@@ -43,11 +48,6 @@ const router = createRouter({
             path: '/register',
             name: 'register',
             component: Register
-        },
-        {
-            path: "/info",
-            name: "info",
-            component: Info
         },
         {
             path: "/userDetail/:id",  // userDetail?id=1
