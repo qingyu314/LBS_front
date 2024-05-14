@@ -6,6 +6,7 @@ import bdMap from "@/views/bdMap.vue";
 import mapPoint from "@/views/mapPoint.vue";
 import Header from "@/components/Header.vue";
 import userDetail from "@/views/userDetail.vue";
+import POIMap from "@/views/POIMap.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,6 +21,11 @@ const router = createRouter({
                     path: 'map',
                     name: 'map',
                     component: bdMap
+                },
+                {
+                    path: 'poi',
+                    name: 'poi',
+                    component: POIMap
                 },
                 {
                     path: 'mapPoint',
@@ -47,7 +53,8 @@ const router = createRouter({
             path: "/userDetail/:id",  // userDetail?id=1
             name: "userDetail",
             component: userDetail
-        }
+        },
+
     ]
 })
 

@@ -17,43 +17,7 @@
           <el-menu-item index="3">
             <el-button type="info" plain :icon="ChatDotSquare" @click="dotShow">查看贴图</el-button>
           </el-menu-item>
-          <el-menu-item>
-            <el-checkbox v-model="mapSetting.enableScrollWheelZoom" label="鼠标缩放"/>
-
-          </el-menu-item>
-          <el-menu-item>
-            <el-checkbox v-model="mapSetting.enableDragging" label="拖拽"/>
-
-          </el-menu-item>
-          <el-menu-item>
-            <el-checkbox v-model="mapSetting.enableInertialDragging" label="惯性拖拽"/>
-
-          </el-menu-item>
-
-          <el-menu-item>
-            <el-checkbox v-model="mapSetting.enablePinchToZoom" label="双指缩放地图"/>
-
-          </el-menu-item>
-
-          <el-menu-item>
-            <el-checkbox v-model="mapSetting.enableKeyboard" label="键盘操作"/>
-
-          </el-menu-item>
-
-          <el-menu-item>
-            <el-checkbox v-model="mapSetting.enableDoubleClickZoom" label="双击缩放，左键双击放大、右键双击缩小"/>
-
-          </el-menu-item>
-
-          <el-menu-item>
-            <el-checkbox v-model="mapSetting.enableContinuousZoom" label="双击平滑缩放效果"/>
-
-          </el-menu-item>
-
-          <el-menu-item>
-            <el-checkbox v-model="mapSetting.enableTraffic" label="显示交通路况"/>
-
-          </el-menu-item>
+          <mapOption v-model="mapSetting"/>
         </el-menu>
       </el-col>
     </el-row>
@@ -151,12 +115,10 @@
         <BMarker
             v-for="(item, index) in cardList"
             :position="item.position"
-            :icon="`blue${index + 1}`"
             @click="() => clickDot(item)"
             enableClicking
         />
         <BInfoWindow
-
             v-model:show="show"
             :position="position"
             enableAutoPan
@@ -230,13 +192,10 @@ import {
   type MapType,
   usePointGeocoder,
   type PointGeocoderResult,
-  BLocation,
   BLabel,
   BMarker,
   BCircle,
-  usePointConvertor,
-  CoordinatesToType,
-  CoordinatesFromType, BInfoWindow,
+  BInfoWindow,
 } from "vue3-baidu-map-gl";
 import request from "@/utils/request";
 import {
@@ -246,6 +205,7 @@ import {
   type UploadUserFile
 } from "element-plus";
 import router from "@/router";
+import MapOption from "@/components/mapOption.vue";
 // 初始化-------------------------------------------------------------------------
 let authHeaders = {
   Authorization: sessionStorage.getItem("token")
@@ -309,8 +269,6 @@ function handleClick(e) {
   dataForm.value.longitude = markerPoint.value.lng
   getGeo(e.latlng)
 }
-// 坐标转换-----------------------------------------------------------------------------------------------------------
-const { result:resConv, convert, isLoading:isLoadConv, isError:isErrConv, status:stConv } = usePointConvertor()
 // 监视------------------------------------------------------------------------------------------------------------
 watch(location, (newLocation, oldLocation) => {
   if (newLocation) {
@@ -358,7 +316,14 @@ const submitUpload = () => {
 // 一个范围内的贴图查询-----------------------------------------------------------------------------------------------------------------
 let distance = ref(1000)
 const url = ref('')
-const cardList = ref([])
+interface cardItem {
+  userId: string,
+  username: string,
+  comment: string,
+  imgUrl: string,
+  position: {lat: number, lng: number}
+}
+const cardList = ref<cardItem[]>([])
 const labelPosition = ref<FormProps['labelPosition']>('left')
 const dotShow = () => {
   getImgSec()
@@ -372,30 +337,24 @@ const getImgSec = () => {
       radius: distance.value
     },
   }).then(res => {
+    if (res.data.length > 0) {
+      isLoadingCard.value = true
+    }
     console.log(res.data)
     for (let i = 0; i < res.data.length; i++) {
       let resObj = res.data[i];
       let cardForm = {
+        comment: '',
         userId: resObj.userId,
         username: '',
-        comment: '',
         imgUrl: '',
         position: {lat: 0, lng: 0},
       }
-      let flag1 = false
-      let flag2 = false
-      let flag3 = false
       let cnt = 0
 
       request.get('secure/user/' + res.data[i].userId).then((res1) => {
-        console.log(res1.data)
         cardForm.username = res1.data.username
-        cardForm.position = {lat: res1.data.latitude, lng: res1.data.longitude}
-        flag1 = true
-        // if (flag1 && flag2 && flag3) {
-        //   cardList.value.push(cardForm)
-        //   cnt++
-        // }
+        cardForm.position = {lat: resObj.latitude, lng: resObj.longitude}
       }).then(() => {
         request.get('secure/file/image', {
           params: {
@@ -407,35 +366,29 @@ const getImgSec = () => {
           url.value = urlCreator.createObjectURL(res2.data);  // 创建一个临时URL用于图片显示
           cardForm.imgUrl = url.value
           console.log(url.value);
-          flag2 = true
-          // if (flag1 && flag2 && flag3) {
-          //   cardList.value.push(cardForm)
-          //   cnt++
-          // }
-        }).then(()=>{
-            request.get('secure/file/comments',{
-              params: {
-                imageid: resObj.id
-              }
-            }).then((res3)=>{
-              cardForm.comment = res3.data
-              if (flag1 && flag2 && flag3) {
-                cardList.value.push(cardForm)
-                cnt++
-              }
-            })
+        }).then(() => {
+          request.get('secure/file/comments', {
+            params: {
+              imageid: resObj.id
+            }
+          }).then((res3) => {
+            if (res3.data && res3.data.length > 0 && res3.data[0].contain !== undefined) {
+              cardForm.comment = res3.data[0].contain;
+            } else {
+              cardForm.comment = '无评论';
+            }
+          }).catch((error) => {
+            console.error('Error fetching comments:', error);
+            cardForm.comment = '无评论';
+          }).then(() => {
+            cardList.value.push(cardForm)
+            cnt++
+          })
         })
       })
     }
-  }).then(()=>{
-    console.log(333)
-    if(cardList.value.length > 0) {
-      position.value = cardList.value[0].position
-      console.log(cardList.value)
-    }
-    else console.log(0)
+    isLoadingCard.value = false
   })
-
 }
 // 在地图上显示贴图卡片----------------------------------------------------------------------------------------------------
 const position = ref()
