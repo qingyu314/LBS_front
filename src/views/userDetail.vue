@@ -1,9 +1,9 @@
 <template>
-  <div style="width: 100%; background: aliceblue; overflow: hidden;">
-    <el-card style="width: 60%; margin: 20px auto;">
+  <div style="width: 100%; overflow: hidden;">
+    <el-card style="width: 60%; margin: 20px auto; border-radius: 8px">
       <div class="profile-card">
         <div class="profile-header">
-          <img class="cover-photo" src="/public/profile_2.png" alt="Cover Photo"/>
+          <img class="cover-photo" src="/profile_2.png" alt="Cover Photo"/>
         </div>
         <div class="profile-content">
           <el-icon :size="80">
@@ -17,12 +17,15 @@
       </div>
       <div class="image-record">
         <div class="image-container" v-for="image in images" :key="image.id">
-          <el-card>
+          <el-card style="border-radius: 8px">
             <img :src="image.url" :alt="'Image ' + image.id" class="image"/>
           </el-card>
         </div>
       </div>
     </el-card>
+  </div>
+  <div class="footer">
+    <img src="/footer.png" alt="Footer Image" class="footer-image"/>
   </div>
 </template>
 
@@ -150,5 +153,14 @@ function loadImages(userId) {
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 5px;
+}
+
+.footer {
+  width: 100%;
+  text-align: center;
+}
+
+.footer-image {
+  width: 25%;
 }
 </style>

@@ -1,9 +1,9 @@
 <template>
-  <div style="width: 100%; background: aliceblue; overflow: hidden;">
-    <el-card style="width: 60%; margin: 20px auto;">
+  <div style="width: 100%; overflow: hidden;">
+    <el-card style="width: 60%; margin: 20px auto; border-radius: 8px">
       <div class="profile-card">
         <div class="profile-header">
-          <img class="cover-photo" src="/public/profile_1.png" alt="Cover Photo"/>
+          <img class="cover-photo" src="/profile_1.png" alt="Cover Photo"/>
         </div>
         <div class="profile-content">
           <el-icon :size="80">
@@ -38,8 +38,7 @@
         </div>
         <div class="image-record">
           <div class="image-container" v-for="image in images" :key="image.id">
-            <el-card>
-              {{ image.id }}
+            <el-card style="border-radius: 8px">
               <img :src="image.url" :alt="'Image ' + image.id" class="image"/>
               <el-button type="danger" @click="confirmDelete(image.id)">删除</el-button>
             </el-card>
@@ -53,6 +52,9 @@
         <el-button @click="dialogVisible = false">取消</el-button>
       </span>
     </el-dialog>
+  </div>
+  <div class="footer">
+    <img src="/footer.png" alt="Footer Image" class="footer-image"/>
   </div>
 </template>
 
@@ -321,6 +323,15 @@ function update() {
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 5px;
+}
+
+.footer {
+  width: 100%;
+  text-align: center;
+}
+
+.footer-image {
+  width: 25%;
 }
 </style>
 

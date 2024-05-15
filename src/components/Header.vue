@@ -1,8 +1,6 @@
 <template>
   <header class="app-header">
-    <el-text type="primary"
-             style="width: 150px; padding-left: 30px; font-size: 30px; font-weight: bold; user-select: none">诗 远 行
-    </el-text>
+    <Logo text="诗 远 行" :fontSize="30"/>
     <nav class="nav">
       <ul class="nav-list">
         <li class="nav-item">
@@ -45,6 +43,7 @@
 <script lang="ts" setup>
 import {ArrowDown, Document, SwitchButton, UserFilled} from "@element-plus/icons-vue";
 import { reactive, provide } from 'vue';
+import Logo from '@/components/Logo.vue';
 
 // 创建一个响应式对象来存储全局状态
 const userState = reactive({
