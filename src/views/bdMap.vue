@@ -4,7 +4,6 @@
       <el-col :span="12">
         <el-menu
             style="width: 350px; min-height: calc(100vh - 50px);"
-            class="el-menu-vertical-demo"
         >
           <el-menu-item index="1">
             <el-button type="info" plain :icon="Location" @click="getLoc">自身位置</el-button>
@@ -17,7 +16,12 @@
           <el-menu-item index="3">
             <el-button type="info" plain :icon="ChatDotSquare" @click="dotShow">查看贴图</el-button>
           </el-menu-item>
-          <mapOption v-model="mapSetting"/>
+          <el-sub-menu>
+            <template #title>
+              <el-icon><Setting/></el-icon>
+            </template>
+            <mapOption v-model="mapSetting"/>
+          </el-sub-menu>
         </el-menu>
       </el-col>
     </el-row>
@@ -136,7 +140,7 @@
               <el-text>{{ showItem.comment }}</el-text>
             </el-form-item>
             <el-form-item label="图片">
-              <el-image style="width: 400px;" :src="showItem.imgUrl"/>
+              <el-image :src="showItem.imgUrl"/>
             </el-form-item>
           </el-form>
 
@@ -148,7 +152,7 @@
           width="50%"
       >
         <el-form-item label="评论">
-          <el-input placeholder="请输入您的评论" type="textarea" v-model="dataForm.comment" />
+          <el-input placeholder="请输入您的评论" type="textarea" v-model="cmtUpload" />
         </el-form-item>
         <el-upload
             v-model:file-list="fileList"
@@ -160,6 +164,7 @@
             :on-preview="handlePictureCardPreview"
             :on-remove="handleRemove"
             :before-upload="beforeUpload"
+            :on-success="handleSuccess"
             :data="dataForm"
             :auto-upload="false"
             multiple
@@ -183,7 +188,7 @@
 
 <script lang="ts" setup>
 
-import {ChatDotSquare, Notification, Location, Plus} from "@element-plus/icons-vue";
+import {ChatDotSquare, Notification, Location, Plus, Setting} from "@element-plus/icons-vue";
 import {onMounted, ref, watch, type UnwrapRef} from "vue";
 import {
   BMap,
@@ -212,9 +217,9 @@ let authHeaders = {
 }
 const map = ref()
 let mapSetting = ref<MapProps>({
-  enableDragging: false,
+  enableDragging: true,
   enableInertialDragging: true,
-  enableScrollWheelZoom: false,
+  enableScrollWheelZoom: true,
   enableContinuousZoom: true,
   enableResizeOnCenter: true,
   enableDoubleClickZoom: false,
@@ -248,16 +253,14 @@ function handleInitd() {
   getLoc()
 }
 
-
 // 标点----------------------------------------------------------------------------------------------------------------
 const markerPoint = point
 const dataForm = ref({
-  id: 1,
-  // parseInt(sessionStorage.getItem("id"), 10),
+  id: parseInt(sessionStorage.getItem("id"), 10),
   latitude: markerPoint.value.lat,
   longitude: markerPoint.value.lng,
-  comment: ''
 })
+const cmtUpload = ref<string>('')
 const {get: getGeo, result, isLoading: isLoadingGeo, isEmpty} = usePointGeocoder<PointGeocoderResult>(null, () => {
   console.log(result.value)
 })
@@ -281,17 +284,20 @@ watch(location, (newLocation, oldLocation) => {
     console.log(markerPoint.value)
   }
 })
-// 添加贴图按钮--------------------------------------------------------------------------------------------
-// 注意：这里的form可能要删除，功能可能和dataForm重合
-let dialogVisible = ref(false)
-const add = () => {
-  dialogVisible.value = true;
-}
-
 // 上传相关--------------------------------------------------------------------------------------------------
+// 注意：这里的form可能要删除，功能可能和dataForm重合
 const fileList = ref<UploadUserFile[]>([])
 const dialogImageUrl = ref('')
 const previewVisible = ref(false)
+let dialogVisible = ref(false)
+
+// 添加贴图按钮--------------------------------------------------------------------------------------------
+const add = () => {
+  cmtUpload.value='';
+  fileList.value=[];
+  dialogVisible.value = true;
+}
+
 const handleRemove: UploadProps['onRemove'] = (uploadFile, uploadFiles) => {
   console.log(uploadFile, uploadFiles)
 }
@@ -307,6 +313,15 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
   return true
 }
 
+function handleSuccess(response: any) {
+  console.log(cmtUpload.value)
+  request.post('/secure/file/comment/add', {
+      userid: 8,
+      contain: "shabby",
+      imageid: response.data,
+  })
+}
+
 const uploadRef = ref<UploadInstance>()
 const submitUpload = () => {
   console.log(fileList.value)
@@ -314,7 +329,7 @@ const submitUpload = () => {
 }
 
 // 一个范围内的贴图查询-----------------------------------------------------------------------------------------------------------------
-let distance = ref(1000)
+let distance = ref(100000)
 const url = ref('')
 interface cardItem {
   userId: string,
@@ -337,10 +352,6 @@ const getImgSec = () => {
       radius: distance.value
     },
   }).then(res => {
-    if (res.data.length > 0) {
-      isLoadingCard.value = true
-    }
-    console.log(res.data)
     for (let i = 0; i < res.data.length; i++) {
       let resObj = res.data[i];
       let cardForm = {
@@ -365,7 +376,6 @@ const getImgSec = () => {
           const urlCreator = window.URL || window.webkitURL;
           url.value = urlCreator.createObjectURL(res2.data);  // 创建一个临时URL用于图片显示
           cardForm.imgUrl = url.value
-          console.log(url.value);
         }).then(() => {
           request.get('secure/file/comments', {
             params: {
@@ -387,7 +397,8 @@ const getImgSec = () => {
         })
       })
     }
-    isLoadingCard.value = false
+  }).then(()=>{
+    console.log(cardList.value)
   })
 }
 // 在地图上显示贴图卡片----------------------------------------------------------------------------------------------------
