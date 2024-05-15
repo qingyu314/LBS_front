@@ -1,61 +1,75 @@
 <template>
-  <div style="width: 100%; height: 100vh; background: aliceblue; overflow: hidden;">
+  <div style="width: 100%; background: aliceblue; overflow: hidden;">
     <el-card style="width: 60%; margin: 20px auto;">
       <div class="profile-card">
         <div class="profile-header">
-          <img class="cover-photo" src="/public/profile.png" alt="Cover Photo" />
+          <img class="cover-photo" src="/public/profile.png" alt="Cover Photo"/>
         </div>
         <div class="profile-content">
           <el-icon :size="80">
-            <User />
+            <User/>
           </el-icon>
           <div class="user-info">
-            <h1 class="username">{{ form.username }}</h1>
+            <h1 class="username">{{ form.username || '未登录' }}</h1>
             <span>{{ form.introduction || '暂无个人介绍' }}</span>
           </div>
           <el-button type="primary" @click="edit">编辑个人资料</el-button>
         </div>
         <div v-if="editing" class="edit-form">
           <el-form-item label="用户名" class="form-item">
-            <el-input v-model="form.username" class="input-right" />
+            <el-input v-model="form.username" class="input-right"/>
           </el-form-item>
           <el-form-item label="原密码" class="form-item">
-            <el-input v-model="form.oldPassword" show-password class="input-right" />
+            <el-input v-model="form.oldPassword" show-password class="input-right"/>
           </el-form-item>
           <el-form-item label="新密码" class="form-item">
-            <el-input v-model="form.password" show-password class="input-right" :disabled="!form.oldPassword" />
+            <el-input v-model="form.password" show-password class="input-right" :disabled="!form.oldPassword"/>
           </el-form-item>
           <el-form-item label="确认新密码" class="form-item">
-            <el-input v-model="form.confirmPassword" show-password class="input-right" :disabled="!form.oldPassword" />
+            <el-input v-model="form.confirmPassword" show-password class="input-right" :disabled="!form.oldPassword"/>
           </el-form-item>
           <el-form-item label="个人介绍" class="form-item">
-            <el-input v-model="form.introduction" class="input-right" />
+            <el-input v-model="form.introduction" class="input-right"/>
           </el-form-item>
           <div class="form-actions">
             <el-button type="primary" @click="update">保存</el-button>
             <el-button @click="cancel">取消</el-button>
           </div>
         </div>
+        <div class="image-record">
+          <el-row :gutter="20">
+            <el-col v-for="image in images" :key="image.id" :span="12">
+              <el-card>
+                {{image.id}}
+                <img :src="image.url" :alt="'Image ' + image.id" class="image"/>
+                <el-button type="danger" @click="deleteImage(image.id)">删除</el-button>
+              </el-card>
+            </el-col>
+          </el-row>
+        </div>
       </div>
     </el-card>
   </div>
 </template>
 
-<script lang="ts" setup>
-import { User } from "@element-plus/icons-vue";
-import { reactive, ref, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
+<script setup>
+import {User} from "@element-plus/icons-vue";
+import {reactive, ref, inject, onMounted} from 'vue';
+import {ElMessage} from 'element-plus';
 import request from "@/utils/request";
 
 let editing = ref(false);
+let images = ref([]);
 let form = reactive({
-  id: sessionStorage.getItem("id"), // 假设用户ID存储在sessionStorage中
+  id: sessionStorage.getItem("id"),
   username: sessionStorage.getItem("username"),
   oldPassword: '',
   password: '',
   confirmPassword: '',
   introduction: ''
 });
+
+const userState = inject('userState');
 
 onMounted(() => {
   const userId = sessionStorage.getItem("id");
@@ -70,7 +84,73 @@ onMounted(() => {
       });
     }
   });
+
+  loadImages(userId); // 加载图片
 });
+
+function loadImages(userId) {
+  request.get(`/secure/file/userimage`, {
+    params: {id: userId}
+  }).then(res => {
+    if (res.data) {
+      let imageList = res.data;
+      imageList.forEach(imageObj => {
+        request.get(`/secure/file/image`, {
+          params: {
+            imageId: imageObj.id
+          },
+          responseType: 'blob'
+        }).then(response => {
+          const url = URL.createObjectURL(response.data);
+          images.value.push({id: imageObj.id, url});
+          images.value.sort((a, b) => a.id - b.id); // 按 ID 排序
+        }).catch(error => {
+          ElMessage({
+            type: "error",
+            message: `获取图片 ${imageObj.id} 失败: ${error}`
+          });
+        });
+      });
+    } else {
+      ElMessage({
+        type: "error",
+        message: res.data.msg
+      });
+    }
+  }).catch(error => {
+    ElMessage({
+      type: "error",
+      message: `获取图片列表失败: ${error}`
+    });
+  });
+}
+
+function deleteImage(imageId) {
+  request.delete(`/secure/file/image/delete`, {
+    params: {
+      imageId: imageId,
+      userId: sessionStorage.getItem("id")
+    }
+  }).then(res => {
+    if (res.data.code === '0') {
+      ElMessage({
+        type: "success",
+        message: "删除成功"
+      });
+      images.value = images.value.filter(image => image.id !== imageId);
+    } else {
+      ElMessage({
+        type: "error",
+        message: res.data.msg
+      });
+    }
+  }).catch(error => {
+    ElMessage({
+      type: "error",
+      message: `删除图片失败: ${error}`
+    });
+  });
+}
 
 function edit() {
   editing.value = true;
@@ -78,18 +158,36 @@ function edit() {
 
 function cancel() {
   editing.value = false;
+  form.username = sessionStorage.getItem("username");
   form.oldPassword = '';
   form.password = '';
   form.confirmPassword = '';
+  form.introduction = sessionStorage.getItem("introduction");
 }
 
 function update() {
+  if (form.username == '') {
+    ElMessage({
+      type: "error",
+      message: "用户名不能为空"
+    });
+    return;
+  }
+
   const storedPassword = sessionStorage.getItem("password");
 
   if (form.oldPassword && form.oldPassword !== storedPassword) {
     ElMessage({
       type: "error",
       message: "原密码不正确"
+    });
+    return;
+  }
+
+  if (form.oldPassword && form.password == '') {
+    ElMessage({
+      type: "error",
+      message: "新密码不能为空"
     });
     return;
   }
@@ -118,6 +216,7 @@ function update() {
         type: "success",
         message: "更新成功"
       });
+      userState.username = form.username;
       sessionStorage.setItem("username", form.username);
       if (form.password) {
         sessionStorage.setItem("password", form.password);
@@ -195,5 +294,17 @@ function update() {
 .form-actions {
   text-align: center;
   margin-top: 20px;
+}
+
+.image-record {
+  margin-top: 20px;
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px;
 }
 </style>

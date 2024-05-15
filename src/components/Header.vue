@@ -16,7 +16,7 @@
           <div class="el-dropdown-link" style="display: flex;justify-content: center;gap: 6px">
             <el-icon size="18px"><UserFilled/></el-icon>
             <el-text style="user-select: none;font-size: 18px">
-            {{ Name }}
+            {{ userState.username }}
             </el-text>
             <el-icon size="18px" ><arrow-down/></el-icon>
           </div>
@@ -28,7 +28,7 @@
               </el-icon>
               账号信息
             </el-dropdown-item>
-            <el-dropdown-item @click="$router.push('/login')">
+            <el-dropdown-item @click="logout">
               <el-icon class="el-icon--left">
                 <SwitchButton/>
               </el-icon>
@@ -41,11 +41,29 @@
   </header>
   <router-view></router-view>
 </template>
+
 <script lang="ts" setup>
 import {ArrowDown, Document, SwitchButton, UserFilled} from "@element-plus/icons-vue";
+import { reactive, provide } from 'vue';
 
-let Name = sessionStorage.getItem("username") == null ? "未登录" : sessionStorage.getItem("username")
+// 创建一个响应式对象来存储全局状态
+const userState = reactive({
+  username: sessionStorage.getItem("username") || '未登录',
+});
 
+// 使用 provide 提供全局状态
+provide('userState', userState);
+
+function logout() {
+  // 清除 sessionStorage 中的用户相关数据
+  sessionStorage.removeItem('id');
+  sessionStorage.removeItem('username');
+  sessionStorage.removeItem('password');
+  sessionStorage.removeItem('introduction');
+
+  // 成功注销后重定向到登录页面
+  window.location.href = '/login';
+}
 </script>
 
 <style scoped>

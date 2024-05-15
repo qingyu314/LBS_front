@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 const request = axios.create({
-    baseURL: 'http://localhost:9091',
-    // baseURL: 'http://192.168.43.105:9091',
-    timeout: 5000
+    // baseURL: 'http://localhost:9091',
+    baseURL: 'http://192.168.43.105:9091',
+    timeout: 15000
 });
 
 // request 拦截器
@@ -29,7 +29,7 @@ request.interceptors.request.use(config => {
 // 可以在接口响应后统一处理结果
 request.interceptors.response.use(
     response => {
-        console.log('response: ' + response);
+        // console.log('response: ' + response);
         return response;
     }, error => {
         console.log('response error: ' + error);
