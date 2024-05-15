@@ -1,140 +1,142 @@
 <template>
   <div style="display: flex">
-    <el-row class="tac">
-      <el-col :span="12">
-        <el-menu
-            style="width: 350px; min-height: calc(100vh - 50px);"
-        >
-          <el-menu-item index="1">
-            <el-button type="info" plain :icon="Location" @click="getLoc">自身位置</el-button>
-          </el-menu-item>
+    <el-menu
+        :collapse="isCollapse"
+        style="min-height: calc(100vh - 50px);"
+    >
+      <div style="margin: 10px auto auto 10px">
+        <el-button :icon="Fold" plain type="info" @click="changeMode"></el-button>
+      </div>
+      <el-menu-item index="1">
+        <el-icon><Location/></el-icon>
+        <template #title>
+          <el-button plain type="info" @click="getLoc">自身位置</el-button>
+        </template>
+      </el-menu-item>
 
-          <el-menu-item index="2">
-            <el-button type="info" plain :icon="Notification" @click="add">添加贴图</el-button>
-          </el-menu-item>
+      <el-menu-item index="2">
+        <el-icon><Notification/></el-icon>
+        <template #title>
+          <el-button plain type="info" @click="add">添加贴图</el-button>
+        </template>
+      </el-menu-item>
 
-          <el-menu-item index="3">
-            <el-button type="info" plain :icon="ChatDotSquare" @click="dotShow">查看贴图</el-button>
-          </el-menu-item>
-          <el-sub-menu>
-            <template #title>
-              <el-icon><Setting/></el-icon>
-            </template>
-            <mapOption v-model="mapSetting"/>
-          </el-sub-menu>
-        </el-menu>
-      </el-col>
-    </el-row>
+      <el-menu-item index="3">
+        <el-icon><ChatDotSquare/></el-icon>
+        <template #title>
+          <el-button plain type="info" @click="dotShow">查看贴图</el-button>
+        </template>
+      </el-menu-item>
+      <el-sub-menu index="4">
+        <template #title>
+          <el-icon><Setting/></el-icon>
+          <span>地图设置</span>
+        </template>
+        <mapOption v-model="mapSetting"/>
+      </el-sub-menu>
+      <el-menu-item index="5">
+        <el-icon><Guide /></el-icon>
+        <template #title>
+          <span @click="router.push('/poi')">POI跳转</span>
+        </template>
+      </el-menu-item>
+    </el-menu>
+
     <div style="flex: 1">
-      <div class="state" v-if="!isLoadingLoc && !isError">
-        <el-text size="large" type="primary">定位:</el-text>
-        <br/>
-        <el-text>
-          城市 - {{ location.address?.province }}-{{ location.address?.city }}-{{ location.address?.district }}-{{
-            location.address?.street
-          }}
-        </el-text>
-        <div style="margin-top: 20px">
-          <span>纬度 - {{ location.point?.lat }}</span>
-          <br/>
-          <span>经度 - {{ location.point?.lng }}</span>
-        </div>
+      <div v-if="!isLoadingLoc && !isError" class="location-container">
 
-        <br/>
+          <div class="location-details">
+            <el-text size="large" type="primary">定位:</el-text>
+            <el-text>
+              城市 - {{ location.address?.province }}-{{ location.address?.city }}-{{ location.address?.district }}-{{ location.address?.street }}
+              <br/>
+              <span>定位精度 - {{ location.accuracy }}m</span>
+            </el-text>
+          </div>
+
+          <div class="coordinates">
+            <span>纬度 - {{ location.point?.lat }}</span>
+            <br/>
+            <span>经度 - {{ location.point?.lng }}</span>
+          </div>
+
         <span>定位精度 - {{ location.accuracy }}m</span>
       </div>
-      <div class="state" v-else-if="isError">
+      <div v-else-if="isError" class="location-container">
         <el-text size="large" type="danger">
           出错了，{{ status }}
         </el-text>
       </div>
-      <div class="state" v-else>
+      <div v-else class="location-container">
         <el-text type="info">
           定位中...
         </el-text>
       </div>
-      <div>
-        <el-select
-            v-model="type"
-            placeholder="Select"
-            size="large"
-            style="width: 240px"
-        >
-          <el-option
-              v-for="item in typeData"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-          />
-        </el-select>
-      </div>
 
-      <br/>
-      <br/>
       <BMap
-          v-bind="$attrs"
-          height="700px"
-          :heading="0"
-          :tilt="45"
-          :center="location.point || undefined"
           ref="map"
-          :zoom="19"
-          :minZoom="3"
-          :mapType="type"
-          :enableDragging="mapSetting.enableDragging"
-          :enableInertialDragging="mapSetting.enableInertialDragging"
-          :enableScrollWheelZoom="mapSetting.enableScrollWheelZoom"
+          :center="location.point || undefined"
           :enableContinuousZoom="mapSetting.enableContinuousZoom"
           :enableDoubleClickZoom="mapSetting.enableDoubleClickZoom"
+          :enableDragging="mapSetting.enableDragging"
+          :enableInertialDragging="mapSetting.enableInertialDragging"
           :enableKeyboard="mapSetting.enableKeyboard"
           :enablePinchToZoom="mapSetting.enablePinchToZoom"
+          :enableScrollWheelZoom="mapSetting.enableScrollWheelZoom"
           :enableTraffic="mapSetting.enableTraffic"
+          :heading="0"
+          :mapType="mapSetting.type"
+          :minZoom="3"
+          :tilt="45"
+          :zoom="19"
+          height="700px"
+          v-bind="$attrs"
 
-          @initd="handleInitd"
           @click="handleClick"
+          @initd="handleInitd"
       >
         <template v-if="!isLoadingLoc">
           <BMarker :position="location.point"></BMarker>
           <BCircle
-              strokeStyle="solid"
-              strokeColor="#0099ff"
+              :center="location.point"
+              :fillOpacity="0.5"
+              :radius="location.accuracy"
               :strokeOpacity="0.8"
               fillColor="#0099ff"
-              :fillOpacity="0.5"
-              :center="location.point"
-              :radius="location.accuracy"
+              strokeColor="#0099ff"
+              strokeStyle="solid"
           />
         </template>
         <!--      标点-->
         <template v-if="!isLoadingGeo && !isEmpty">
           <BMarker :position="point"></BMarker>
           <BLabel
-              style="color: #333; font-size: 9px"
-              :position="result.point"
               :content="`地址: ${result?.address} 所属商圈:${result?.business} 最匹配地点: ${
             result?.surroundingPois[0]?.title || '无'
           }`"
+              :position="result.point"
+              style="color: #333; font-size: 9px"
           />
         </template>
         <BMarker
             v-for="(item, index) in cardList"
             :position="item.position"
-            @click="() => clickDot(item)"
             enableClicking
+            @click="() => clickDot(item)"
         />
         <BInfoWindow
             v-model:show="show"
-            :position="position"
-            enableAutoPan
-            enableCloseOnClick
             :offset="{
         x: 0,
         y: -10
       }"
+            :position="position"
+            enableAutoPan
+            enableCloseOnClick
         >
           <el-form label-width="auto" style="max-width: 600px">
             <el-form-item label="Name">
-              <el-text @click="jumpUser">{{ showItem.username }}</el-text>
+              <el-text @click="jumpUser(showItem.userId)">{{ showItem.username }}</el-text>
             </el-form-item>
             <el-form-item label="评论">
               <el-text>{{ showItem.comment }}</el-text>
@@ -152,21 +154,21 @@
           width="50%"
       >
         <el-form-item label="评论">
-          <el-input placeholder="请输入您的评论" type="textarea" v-model="cmtUpload" />
+          <el-input v-model="cmtUpload" placeholder="请输入您的评论" type="textarea"/>
         </el-form-item>
         <el-upload
-            v-model:file-list="fileList"
-            action="http://192.168.43.105:9091/secure/file/upload"
-            list-type="picture-card"
             ref="uploadRef"
-            drag="true"
+            v-model:file-list="fileList"
+            :auto-upload="false"
+            :before-upload="beforeUpload"
+            :data="dataForm"
             :headers="authHeaders"
             :on-preview="handlePictureCardPreview"
             :on-remove="handleRemove"
-            :before-upload="beforeUpload"
             :on-success="handleSuccess"
-            :data="dataForm"
-            :auto-upload="false"
+            action="http://192.168.43.105:9091/secure/file/upload"
+            drag="true"
+            list-type="picture-card"
             multiple
         >
           <el-icon>
@@ -175,7 +177,7 @@
         </el-upload>
 
         <el-dialog v-model="previewVisible">
-          <img w-full :src="dialogImageUrl" alt="Preview Image"/>
+          <img :src="dialogImageUrl" alt="Preview Image" w-full/>
         </el-dialog>
         <template #footer>
           <el-button style="width: 150px; height: 50px" type="primary" @click="submitUpload">上传</el-button>
@@ -188,27 +190,22 @@
 
 <script lang="ts" setup>
 
-import {ChatDotSquare, Notification, Location, Plus, Setting} from "@element-plus/icons-vue";
-import {onMounted, ref, watch, type UnwrapRef} from "vue";
+import {ChatDotSquare, Fold, Location, Notification, Plus, Setting, Guide} from "@element-plus/icons-vue";
+import {onMounted, ref, type UnwrapRef, watch} from "vue";
 import {
-  BMap,
-  useBrowserLocation,
-  type MapProps,
-  type MapType,
-  usePointGeocoder,
-  type PointGeocoderResult,
-  BLabel,
-  BMarker,
   BCircle,
   BInfoWindow,
+  BLabel,
+  BMap,
+  BMarker,
+  type MapProps,
+  type MapType,
+  type PointGeocoderResult,
+  useBrowserLocation,
+  usePointGeocoder,
 } from "vue3-baidu-map-gl";
 import request from "@/utils/request";
-import {
-  ElMessage, type FormProps,
-  type UploadInstance,
-  type UploadProps,
-  type UploadUserFile
-} from "element-plus";
+import {ElMessage, type FormProps, type UploadInstance, type UploadProps, type UploadUserFile} from "element-plus";
 import router from "@/router";
 import MapOption from "@/components/mapOption.vue";
 // 初始化-------------------------------------------------------------------------
@@ -216,7 +213,20 @@ let authHeaders = {
   Authorization: sessionStorage.getItem("token")
 }
 const map = ref()
-let mapSetting = ref<MapProps>({
+interface allSettings {
+  enableDragging: boolean,
+  enableInertialDragging: boolean,
+  enableScrollWheelZoom: boolean,
+  enableContinuousZoom: boolean,
+  enableResizeOnCenter: boolean,
+  enableDoubleClickZoom: boolean,
+  enableKeyboard: boolean,
+  enablePinchToZoom: boolean,
+  enableAutoResize: boolean,
+  enableTraffic: boolean,
+  type: MapType
+}
+let mapSetting = ref<allSettings>({
   enableDragging: true,
   enableInertialDragging: true,
   enableScrollWheelZoom: true,
@@ -226,23 +236,15 @@ let mapSetting = ref<MapProps>({
   enableKeyboard: true,
   enablePinchToZoom: true,
   enableAutoResize: true,
-  enableTraffic: false
+  enableTraffic: false,
+  type: 'BMAP_NORMAL_MAP'
 })
-const type = ref<MapType>('BMAP_NORMAL_MAP')
-const typeData = [
-  {
-    value: 'BMAP_NORMAL_MAP',
-    label: 'BMAP_NORMAL_MAP',
-  },
-  {
-    value: 'BMAP_EARTH_MAP',
-    label: 'BMAP_EARTH_MAP',
-  },
-  {
-    value: 'BMAP_SATELLITE_MAP',
-    label: 'BMAP_SATELLITE_MAP',
-  }
-]
+
+// 改变侧边栏展示模式-------------------------------------------------------------------------------------------
+const isCollapse = ref<boolean>(true)
+const changeMode = () => {
+  isCollapse.value = !isCollapse.value
+}
 // 浏览器定位----------------------------------------------------------------------------------------------------------------
 let point = ref({lng: 116.30793520652882, lat: 40.05861561613348})
 const {get: getLoc, location, isLoading: isLoadingLoc, isError, status} = useBrowserLocation(null, () => {
@@ -272,16 +274,13 @@ function handleClick(e) {
   dataForm.value.longitude = markerPoint.value.lng
   getGeo(e.latlng)
 }
+
 // 监视------------------------------------------------------------------------------------------------------------
 watch(location, (newLocation, oldLocation) => {
   if (newLocation) {
-    console.log(2)
-    console.log(newLocation.point)
     point.value = newLocation.point
     getGeo(newLocation.point)
     markerPoint.value = newLocation.point
-    console.log(111)
-    console.log(markerPoint.value)
   }
 })
 // 上传相关--------------------------------------------------------------------------------------------------
@@ -293,8 +292,8 @@ let dialogVisible = ref(false)
 
 // 添加贴图按钮--------------------------------------------------------------------------------------------
 const add = () => {
-  cmtUpload.value='';
-  fileList.value=[];
+  cmtUpload.value = '';
+  fileList.value = [];
   dialogVisible.value = true;
 }
 
@@ -316,9 +315,9 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
 function handleSuccess(response: any) {
   console.log(cmtUpload.value)
   request.post('/secure/file/comment/add', {
-      userid: 8,
-      contain: "shabby",
-      imageid: response.data,
+    userid: parseInt(sessionStorage.getItem("id"), 10),
+    contain: cmtUpload.value,
+    imageid: response.data,
   })
 }
 
@@ -331,13 +330,15 @@ const submitUpload = () => {
 // 一个范围内的贴图查询-----------------------------------------------------------------------------------------------------------------
 let distance = ref(100000)
 const url = ref('')
+
 interface cardItem {
   userId: string,
   username: string,
   comment: string,
   imgUrl: string,
-  position: {lat: number, lng: number}
+  position: { lat: number, lng: number }
 }
+
 const cardList = ref<cardItem[]>([])
 const labelPosition = ref<FormProps['labelPosition']>('left')
 const dotShow = () => {
@@ -397,7 +398,7 @@ const getImgSec = () => {
         })
       })
     }
-  }).then(()=>{
+  }).then(() => {
     console.log(cardList.value)
   })
 }
@@ -405,27 +406,42 @@ const getImgSec = () => {
 const position = ref()
 const show = ref<boolean>(false)
 const showItem = ref({
+  userId: 0,
   username: '',
   comment: '',
   imgUrl: '',
   position: {lat: 0, lng: 0},
 })
+
 function clickDot(item: UnwrapRef<typeof cardList>[0]) {
   position.value = item.position
   showItem.value = JSON.parse(JSON.stringify(item))
-  if(!show.value) show.value = true
-}
-// 跳转到用户详情页
-function jumpUser(id: number) {
-  if(id == parseInt(sessionStorage.getItem("id"), 10)) {
-    router.push('/info')
-  }
-  else{
-    router.push('userDetail?id=' + id)
-  }
+  if (!show.value) show.value = true
 }
 
+// 跳转到用户详情页----------------------------------------------------------------------------------
+function jumpUser(id: number) {
+  if (id == parseInt(sessionStorage.getItem("id"), 10)) {
+    router.push('/info')
+  } else {
+    router.push('/userDetail/' + String(id))
+  }
+}
+// 进入楼层
+const enterComments = (imageId: number) => {
+
+}
 onMounted(() => {
   console.log(sessionStorage.getItem("username"))
 })
 </script>
+<style scoped>
+.location-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.location-details, .coordinates {
+  margin-top: 20px;
+}
+</style>

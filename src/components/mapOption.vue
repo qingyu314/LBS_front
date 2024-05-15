@@ -1,10 +1,19 @@
 <script lang="ts" setup>
 import {ref, watch} from 'vue';
-import type {MapType} from "vue3-baidu-map-gl";
-
-const type = ref<MapType>('BMAP_NORMAL_MAP')
-
-
+const typeData = [
+  {
+    value: 'BMAP_NORMAL_MAP',
+    label: 'BMAP_NORMAL_MAP',
+  },
+  {
+    value: 'BMAP_EARTH_MAP',
+    label: 'BMAP_EARTH_MAP',
+  },
+  {
+    value: 'BMAP_SATELLITE_MAP',
+    label: 'BMAP_SATELLITE_MAP',
+  }
+]
 const props = defineProps(['modelValue']);
 const emit = defineEmits(['update:modelValue']);
 
@@ -46,6 +55,21 @@ watch(
         <el-checkbox v-model="props.modelValue.enableTraffic" label="显示交通路况"/>
       </el-menu-item>
     </el-sub-menu>
+    <el-menu-item>
+      <el-select
+          v-model="props.modelValue.type"
+          placeholder="Select"
+          size="large"
+          style="width: 240px"
+      >
+        <el-option
+            v-for="item in typeData"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+        />
+      </el-select>
+    </el-menu-item>
   </el-menu>
 </template>
 

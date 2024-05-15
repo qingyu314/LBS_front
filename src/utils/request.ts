@@ -29,7 +29,7 @@ request.interceptors.request.use(config => {
 // 可以在接口响应后统一处理结果
 request.interceptors.response.use(
     response => {
-        // console.log('response: ' + response);
+        console.log('response: ' + response);
         return response;
     }, error => {
         console.log('response error: ' + error);
