@@ -3,7 +3,7 @@
     <el-card style="width: 60%; margin: 20px auto;">
       <div class="profile-card">
         <div class="profile-header">
-          <img class="cover-photo" src="/public/profile.png" alt="Cover Photo"/>
+          <img class="cover-photo" src="/public/profile_1.png" alt="Cover Photo"/>
         </div>
         <div class="profile-content">
           <el-icon :size="80">
@@ -37,18 +37,22 @@
           </div>
         </div>
         <div class="image-record">
-          <el-row :gutter="20">
-            <el-col v-for="image in images" :key="image.id" :span="12">
-              <el-card>
-                {{image.id}}
-                <img :src="image.url" :alt="'Image ' + image.id" class="image"/>
-                <el-button type="danger" @click="deleteImage(image.id)">删除</el-button>
-              </el-card>
-            </el-col>
-          </el-row>
+          <div class="image-container" v-for="image in images" :key="image.id">
+            <el-card>
+              {{ image.id }}
+              <img :src="image.url" :alt="'Image ' + image.id" class="image"/>
+              <el-button type="danger" @click="confirmDelete(image.id)">删除</el-button>
+            </el-card>
+          </div>
         </div>
       </div>
     </el-card>
+    <el-dialog title="确定要删除这张图片吗？" v-model="dialogVisible" width="300px" center>
+      <span slot="footer" class="dialog-footer" style="display: flex; justify-content: center">
+        <el-button type="primary" @click="deleteImage">确定</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -59,6 +63,8 @@ import {ElMessage} from 'element-plus';
 import request from "@/utils/request";
 
 let editing = ref(false);
+let dialogVisible = ref(false);
+let selectedImageId = ref(null);
 let images = ref([]);
 let form = reactive({
   id: sessionStorage.getItem("id"),
@@ -125,10 +131,15 @@ function loadImages(userId) {
   });
 }
 
-function deleteImage(imageId) {
+function confirmDelete(imageId) {
+  selectedImageId.value = imageId;
+  dialogVisible.value = true;
+}
+
+function deleteImage() {
   request.delete(`/secure/file/image/delete`, {
     params: {
-      imageId: imageId,
+      imageId: selectedImageId.value,
       userId: sessionStorage.getItem("id")
     }
   }).then(res => {
@@ -137,7 +148,8 @@ function deleteImage(imageId) {
         type: "success",
         message: "删除成功"
       });
-      images.value = images.value.filter(image => image.id !== imageId);
+      images.value = images.value.filter(image => image.id !== selectedImageId.value);
+      dialogVisible.value = false;
     } else {
       ElMessage({
         type: "error",
@@ -252,12 +264,6 @@ function update() {
   object-fit: cover;
 }
 
-.upload-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-
 .profile-content {
   display: flex;
   align-items: flex-end;
@@ -297,7 +303,16 @@ function update() {
 }
 
 .image-record {
-  margin-top: 20px;
+  column-count: 2;
+  column-gap: 10px;
+}
+
+.image-container {
+  text-align: center;
+  border-radius: 16px;
+  grid-row-start: auto;
+  margin-bottom: 20px;
+  break-inside: avoid;
 }
 
 .image {
@@ -308,3 +323,6 @@ function update() {
   padding: 5px;
 }
 </style>
+
+
+
