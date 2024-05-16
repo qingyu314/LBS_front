@@ -92,7 +92,7 @@
           height="700px"
           v-bind="$attrs"
 
-          @click="handleClick"
+          @click="clickMap"
           @initd="handleInitd"
       >
         <template v-if="!isLoadingLoc">
@@ -118,10 +118,11 @@
               style="color: #333; font-size: 9px"
           />
         </template>
+<!--        显示列表中的位置-->
+        <template>
         <BMarker
             v-for="(item, index) in cardList"
             :position="item.position"
-            enableClicking
             @click="() => clickDot(item)"
         />
         <BInfoWindow
@@ -147,6 +148,7 @@
           </el-form>
 
         </BInfoWindow>
+        </template>
       </BMap>
       <el-dialog
           v-model="dialogVisible"
@@ -267,7 +269,7 @@ const {get: getGeo, result, isLoading: isLoadingGeo, isEmpty} = usePointGeocoder
   console.log(result.value)
 })
 
-function handleClick(e) {
+function clickMap(e) {
   markerPoint.value = e.latlng
   console.log(markerPoint.value)
   dataForm.value.latitude = markerPoint.value.lat
