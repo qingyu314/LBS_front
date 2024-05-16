@@ -1,69 +1,73 @@
 <template>
-  <div style="width: 100%; overflow: hidden;">
-    <el-card style="width: 60%; margin: 20px auto; border-radius: 8px">
-      <div class="profile-card">
-        <div class="profile-header">
-          <img class="cover-photo" src="/profile_1.png" alt="Cover Photo"/>
+  <el-card style="width: 60%; margin: 20px auto; border-radius: 8px">
+    <template #header>
+      <div class="profile-header">
+        <img class="cover-photo" src="/profile_1.png" alt="Cover Photo"/>
+      </div>
+      <div class="profile-content">
+        <el-icon :size="80">
+          <User/>
+        </el-icon>
+        <div class="user-info">
+          <h1 class="username">{{ form.username || '未登录' }}</h1>
+          <span>{{ form.introduction || '暂无个人介绍' }}</span>
         </div>
-        <div class="profile-content">
-          <el-icon :size="80">
-            <User/>
-          </el-icon>
-          <div class="user-info">
-            <h1 class="username">{{ form.username || '未登录' }}</h1>
-            <span>{{ form.introduction || '暂无个人介绍' }}</span>
-          </div>
-          <el-button type="primary" @click="edit">编辑个人资料</el-button>
-        </div>
-        <div v-if="editing" class="edit-form">
-          <el-form-item label="用户名" class="form-item">
-            <el-input v-model="form.username" class="input-right"/>
-          </el-form-item>
-          <el-form-item label="原密码" class="form-item">
-            <el-input v-model="form.oldPassword" show-password class="input-right"/>
-          </el-form-item>
-          <el-form-item label="新密码" class="form-item">
-            <el-input v-model="form.password" show-password class="input-right" :disabled="!form.oldPassword"/>
-          </el-form-item>
-          <el-form-item label="确认新密码" class="form-item">
-            <el-input v-model="form.confirmPassword" show-password class="input-right" :disabled="!form.oldPassword"/>
-          </el-form-item>
-          <el-form-item label="个人介绍" class="form-item">
-            <el-input v-model="form.introduction" class="input-right"/>
-          </el-form-item>
-          <div class="form-actions">
-            <el-button type="primary" @click="update">保存</el-button>
-            <el-button @click="cancel">取消</el-button>
-          </div>
-        </div>
-        <div class="image-record">
-          <div class="image-container" v-for="image in images" :key="image.id">
-            <el-card style="border-radius: 8px">
-              <img :src="image.url" :alt="'Image ' + image.id" class="image"/>
-              <el-button type="danger" @click="confirmDelete(image.id)">删除</el-button>
-            </el-card>
-          </div>
+        <el-button type="primary" @click="edit">编辑个人资料</el-button>
+      </div>
+      <div v-if="editing" class="edit-form">
+        <el-form-item label="用户名" class="form-item">
+          <el-input v-model="form.username" class="input-right"/>
+        </el-form-item>
+        <el-form-item label="原密码" class="form-item">
+          <el-input v-model="form.oldPassword" show-password class="input-right"/>
+        </el-form-item>
+        <el-form-item label="新密码" class="form-item">
+          <el-input v-model="form.password" show-password class="input-right" :disabled="!form.oldPassword"/>
+        </el-form-item>
+        <el-form-item label="确认新密码" class="form-item">
+          <el-input v-model="form.confirmPassword" show-password class="input-right" :disabled="!form.oldPassword"/>
+        </el-form-item>
+        <el-form-item label="个人介绍" class="form-item">
+          <el-input v-model="form.introduction" class="input-right"/>
+        </el-form-item>
+        <div class="form-actions">
+          <el-button type="primary" @click="update">保存</el-button>
+          <el-button @click="cancel">取消</el-button>
         </div>
       </div>
-    </el-card>
-    <el-dialog title="确定要删除这张图片吗？" v-model="dialogVisible" width="300px" center>
+    </template>
+    <div class="image-record">
+      <div class="image-container" v-for="image in images" :key="image.id">
+        <el-card shadow="hover" body-style="padding: 10px" @mouseover="showButtons(image.id)"
+                 @mouseleave="hideButtons(image.id)">
+          <img :src="image.url" :alt="'Image ' + image.id" class="image"/>
+          <div class="overlay" v-if="image.showButtons">
+            <el-button type="primary" plain :icon="Position" size="large" @click="goToMap(image)" class="cover-button" />
+            <el-button type="danger" plain :icon="Delete" size="large" @click="confirmDelete(image.id)" class="cover-button" />
+          </div>
+        </el-card>
+      </div>
+    </div>
+  <div class="footer">
+    <img src="/footer.png" alt="Footer Image" class="footer-image"/>
+  </div>
+  </el-card>
+  <el-dialog title="确定要删除这张图片吗？" v-model="dialogVisible" width="300px" center>
       <span slot="footer" class="dialog-footer" style="display: flex; justify-content: center">
         <el-button type="primary" @click="deleteImage">确定</el-button>
         <el-button @click="dialogVisible = false">取消</el-button>
       </span>
-    </el-dialog>
-  </div>
-  <div class="footer">
-    <img src="/footer.png" alt="Footer Image" class="footer-image"/>
-  </div>
+  </el-dialog>
 </template>
 
 <script setup>
-import {User} from "@element-plus/icons-vue";
+import {User, Position, Delete} from "@element-plus/icons-vue";
 import {reactive, ref, inject, onMounted} from 'vue';
 import {ElMessage} from 'element-plus';
 import request from "@/utils/request";
+import {useRouter} from 'vue-router';
 
+const router = useRouter();
 let editing = ref(false);
 let dialogVisible = ref(false);
 let selectedImageId = ref(null);
@@ -92,7 +96,6 @@ onMounted(() => {
       });
     }
   });
-
   loadImages(userId); // 加载图片
 });
 
@@ -110,7 +113,7 @@ function loadImages(userId) {
           responseType: 'blob'
         }).then(response => {
           const url = URL.createObjectURL(response.data);
-          images.value.push({id: imageObj.id, url});
+          images.value.push({id: imageObj.id, url, showButtons: false});
           images.value.sort((a, b) => a.id - b.id); // 按 ID 排序
         }).catch(error => {
           ElMessage({
@@ -247,13 +250,34 @@ function update() {
     }
   });
 }
+
+function showButtons(imageId) {
+  const image = images.value.find(img => img.id === imageId);
+  if (image) {
+    image.showButtons = true;
+  }
+}
+
+function hideButtons(imageId) {
+  const image = images.value.find(img => img.id === imageId);
+  if (image) {
+    image.showButtons = false;
+  }
+}
+
+function goToMap(image) {
+  router.push({
+    path: '/map',
+    query: {
+      id: image.id,
+      lat: image.lat,
+      lng: image.lng,
+    }
+  });
+}
 </script>
 
 <style scoped>
-.profile-card {
-  width: 100%;
-}
-
 .profile-header {
   position: relative;
   height: 350px;
@@ -310,6 +334,7 @@ function update() {
 }
 
 .image-container {
+  position: relative;
   text-align: center;
   border-radius: 16px;
   grid-row-start: auto;
@@ -320,9 +345,35 @@ function update() {
 .image {
   width: 100%;
   height: auto;
-  border: 1px solid #ccc;
   border-radius: 4px;
-  padding: 5px;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-top: 15px;
+  padding-right: 20px;
+  gap: 10px;
+  opacity: 0;
+  border-radius: 4px;
+}
+
+.image-container:hover .overlay {
+  opacity: 1;
+}
+
+.cover-button {
+  width: 2vw;
+  height: 2vw;
+  border-radius: 25%;
+  opacity: 0.75;
 }
 
 .footer {
@@ -331,9 +382,6 @@ function update() {
 }
 
 .footer-image {
-  width: 25%;
+  width: 40%;
 }
 </style>
-
-
-
