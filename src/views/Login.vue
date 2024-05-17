@@ -24,18 +24,16 @@
 <script lang="ts" setup>
 import {Lock, User} from "@element-plus/icons-vue";
 import request from "@/utils/request";
-import {reactive, ref} from "vue";
+import {onMounted, reactive, ref} from "vue";
 import {ElMessage} from "element-plus";
-import {useRouter} from "vue-router";
 import Logo from '@/components/Logo.vue';
-import Header from "@/components/Header.vue";
+import router from "@/router";
+import gsap from "gsap";
 
 let form = ref({
   username: '',
   password: ''
 })
-
-let router = useRouter();
 
 const formRef = ref()
 
