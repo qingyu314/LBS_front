@@ -1,6 +1,5 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import Login from "@/views/Login.vue";
-import Register from "@/views/Register.vue";
 import Info from "@/views/Info.vue";
 import bdMap from "@/views/bdMap.vue";
 import mapPoint from "@/views/mapPoint.vue";
@@ -48,11 +47,6 @@ const router = createRouter({
             path: '/login',
             name: 'login',
             component: Login
-        },
-        {
-            path: '/register',
-            name: 'register',
-            component: Register
         },
     ]
 })
