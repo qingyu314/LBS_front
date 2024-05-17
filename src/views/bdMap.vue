@@ -24,7 +24,7 @@
       <el-menu-item index="3">
         <el-icon><ChatDotSquare/></el-icon>
         <template #title>
-          <el-button plain type="info" @click="dotShow">查看贴图</el-button>
+          <el-button plain type="info" @click="getImgSec">查看贴图</el-button>
         </template>
       </el-menu-item>
       <el-sub-menu index="4">
@@ -96,7 +96,7 @@
           @initd="handleInitd"
       >
         <template v-if="!isLoadingLoc">
-          <BMarker :position="location.point"></BMarker>
+          <BMarker :position="location.point" :icon="'loc_blue'"></BMarker>
           <BCircle
               :center="location.point"
               :fillOpacity="0.5"
@@ -109,7 +109,7 @@
         </template>
         <!--      标点-->
         <template v-if="!isLoadingGeo && !isEmpty">
-          <BMarker :position="point"></BMarker>
+          <BMarker :position="point" :visible="visible"></BMarker>
           <BLabel
               :content="`地址: ${result?.address} 所属商圈:${result?.business} 最匹配地点: ${
             result?.surroundingPois[0]?.title || '无'
@@ -119,11 +119,11 @@
           />
         </template>
 <!--        显示列表中的位置-->
-        <template>
         <BMarker
             v-for="(item, index) in cardList"
             :position="item.position"
-            @click="() => clickDot(item)"
+            @click="(event) => clickDot(item, event)"
+            enableClicking
         />
         <BInfoWindow
             v-model:show="show"
@@ -145,10 +145,17 @@
             <el-form-item label="图片">
               <el-image :src="showItem.imgUrl"/>
             </el-form-item>
+            <el-form-item size="small" style="text-align: right">
+              <el-button @click="enterComments(showItem.imageId, showItem.userId, showItem.imgUrl)">进入楼层</el-button>
+            </el-form-item>
           </el-form>
-
+          <BControl style=" padding: 10px" :offset="{ x: 0, y: 0 }"
+                    anchor="BMAP_ANCHOR_TOP_RIGHT"
+          >
+            <span class="container">经度： {{ result?.point.lng }}</span>
+            <span class="container">纬度： {{ result?.point.lat }}</span>
+          </BControl>
         </BInfoWindow>
-        </template>
       </BMap>
       <el-dialog
           v-model="dialogVisible"
@@ -187,6 +194,7 @@
 
       </el-dialog>
     </div>
+    <cmtDrawer v-model:drawer="drawer" v-bind:info="drawerInfo" />
   </div>
 </template>
 
@@ -195,12 +203,11 @@
 import {ChatDotSquare, Fold, Location, Notification, Plus, Setting, Guide} from "@element-plus/icons-vue";
 import {onMounted, ref, type UnwrapRef, watch} from "vue";
 import {
-  BCircle,
+  BCircle, BControl,
   BInfoWindow,
   BLabel,
   BMap,
   BMarker,
-  type MapProps,
   type MapType,
   type PointGeocoderResult,
   useBrowserLocation,
@@ -210,6 +217,8 @@ import request from "@/utils/request";
 import {ElMessage, type FormProps, type UploadInstance, type UploadProps, type UploadUserFile} from "element-plus";
 import router from "@/router";
 import MapOption from "@/components/mapOption.vue";
+import {useRoute} from "vue-router";
+import CmtDrawer from "@/components/cmtDrawer.vue";
 // 初始化-------------------------------------------------------------------------
 let authHeaders = {
   Authorization: sessionStorage.getItem("token")
@@ -258,31 +267,33 @@ function handleInitd() {
 }
 
 // 标点----------------------------------------------------------------------------------------------------------------
-const markerPoint = point
 const dataForm = ref({
   id: parseInt(sessionStorage.getItem("id"), 10),
-  latitude: markerPoint.value.lat,
-  longitude: markerPoint.value.lng,
+  latitude: point.value.lat,
+  longitude: point.value.lng,
 })
 const cmtUpload = ref<string>('')
+const visible = ref(false)
 const {get: getGeo, result, isLoading: isLoadingGeo, isEmpty} = usePointGeocoder<PointGeocoderResult>(null, () => {
   console.log(result.value)
 })
 
 function clickMap(e) {
-  markerPoint.value = e.latlng
-  console.log(markerPoint.value)
-  dataForm.value.latitude = markerPoint.value.lat
-  dataForm.value.longitude = markerPoint.value.lng
+  debugger
+  if(!visible.value) visible.value=true
+  console.log('BMap is Clicked')
+  point.value = e.latlng
+  console.log(point.value)
+  dataForm.value.latitude = point.value.lat
+  dataForm.value.longitude = point.value.lng
   getGeo(e.latlng)
 }
 
 // 监视------------------------------------------------------------------------------------------------------------
 watch(location, (newLocation, oldLocation) => {
   if (newLocation) {
-    point.value = newLocation.point
     getGeo(newLocation.point)
-    markerPoint.value = newLocation.point
+    point.value = newLocation.point
   }
 })
 // 上传相关--------------------------------------------------------------------------------------------------
@@ -334,18 +345,15 @@ let distance = ref(100000)
 const url = ref('')
 
 interface cardItem {
-  userId: string,
+  userId: number,
   username: string,
   comment: string,
   imgUrl: string,
+  imageId: number,
   position: { lat: number, lng: number }
 }
 
 const cardList = ref<cardItem[]>([])
-const labelPosition = ref<FormProps['labelPosition']>('left')
-const dotShow = () => {
-  getImgSec()
-}
 const getImgSec = () => {
   cardList.value = []
   request.get('secure/file/locate', {  // 确保URL与后端设置的路由一致
@@ -362,13 +370,13 @@ const getImgSec = () => {
         userId: resObj.userId,
         username: '',
         imgUrl: '',
-        position: {lat: 0, lng: 0},
+        imageId: resObj.id,
+        position: {lat: resObj.latitude, lng: resObj.longitude},
       }
       let cnt = 0
 
       request.get('secure/user/' + res.data[i].userId).then((res1) => {
         cardForm.username = res1.data.username
-        cardForm.position = {lat: resObj.latitude, lng: resObj.longitude}
       }).then(() => {
         request.get('secure/file/image', {
           params: {
@@ -381,9 +389,9 @@ const getImgSec = () => {
           cardForm.imgUrl = url.value
         }).then(() => {
           request.get('secure/file/comments', {
-            params: {
+            params:{
               imageid: resObj.id
-            }
+            },
           }).then((res3) => {
             if (res3.data && res3.data.length > 0 && res3.data[0].contain !== undefined) {
               cardForm.comment = res3.data[0].contain;
@@ -412,10 +420,13 @@ const showItem = ref({
   username: '',
   comment: '',
   imgUrl: '',
+  imageId: 0,
   position: {lat: 0, lng: 0},
 })
 
-function clickDot(item: UnwrapRef<typeof cardList>[0]) {
+function clickDot(item: UnwrapRef<typeof cardList>[0], event: MouseEvent) {
+  debugger
+  event.stopPropagation() // 阻止事件冒泡
   position.value = item.position
   showItem.value = JSON.parse(JSON.stringify(item))
   if (!show.value) show.value = true
@@ -429,13 +440,40 @@ function jumpUser(id: number) {
     router.push('/userDetail/' + String(id))
   }
 }
-// 进入楼层
-const enterComments = (imageId: number) => {
-
-}
-onMounted(() => {
-  console.log(sessionStorage.getItem("username"))
+// 进入楼层--------------------------------------------------------------------------------------------------------
+const drawer = ref(false)
+const drawerInfo = ref({
+  userId: -1,
+  imageId:-1,
+  imgUrl: '',
 })
+const enterComments = (imageId: number, userId: number, imgUrl: string) => {
+  console.log(drawer.value)
+  drawer.value = true
+  drawerInfo.value.userId = userId
+  drawerInfo.value.imageId = imageId
+  drawerInfo.value.imgUrl = imgUrl
+}
+const route = useRoute();
+onMounted(() => {
+  const { lat, lng } = route.query;
+
+  if (lat && lng) {
+    const selectedPoint = {
+      lat: parseFloat(lat as string),
+      lng: parseFloat(lng as string)
+    };
+    map.value.centerAndZoom(new BMap.Point(selectedPoint.lng, selectedPoint.lat), 15);
+
+    const selectedItem = cardList.value.find(item =>
+        item.position.lat === selectedPoint.lat && item.position.lng === selectedPoint.lng
+    );
+
+    if (selectedItem) {
+      clickDot(selectedItem);
+    }
+  }
+});
 </script>
 <style scoped>
 .location-container {
@@ -446,4 +484,12 @@ onMounted(() => {
 .location-details, .coordinates {
   margin-top: 20px;
 }
+.container {
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明的黑色背景 */
+  display: block; /* 让容器宽度自动调整 */
+  padding: 10px; /* 可根据需要调整 */
+  border-radius: 5px; /* 可根据需要调整，增加一些圆角 */
+  color: white; /* 文字颜色为白色 */
+}
+
 </style>
