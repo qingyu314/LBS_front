@@ -52,9 +52,36 @@ const router = createRouter({
         {
             path: '/login',
             name: 'login',
-            component: Login
+            component: Login,
+            meta: {
+                requireAuth: false // 不需要鉴权
+            }
         },
+        {
+            path:'*',
+            name:'404',
+            component: ()=>import('@/views/404.vue'),
+            meta: {
+                requireAuth: false
+            }
+
+        }
     ]
 })
 
+router.beforeEach((to, from, next) => {
+    const type = to.meta.type
+    // 判断该路由是否需要登录权限
+    if (to.meta.requireAuth) {
+        // 该路由需要登录权限
+        if (sessionStorage.getItem('token')) {
+            // 已登录
+            next()
+        } else {
+            next('/login')
+        }
+    } else {
+        next()
+    }
+})
 export default router
