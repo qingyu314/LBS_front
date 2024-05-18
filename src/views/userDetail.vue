@@ -18,7 +18,7 @@
       <div class="image-container" v-for="image in images" :key="image.id">
         <el-card shadow="hover" body-style="padding: 10px" @mouseover="showButtons(image.id)"
                  @mouseleave="hideButtons(image.id)" @click="goToMap(image)">
-          <el-image :src="image.url" lazy class="image" />
+          <el-image :src="image.url" lazy class="image"/>
           <div class="overlay" v-if="image.showButtons">
           </div>
         </el-card>
@@ -31,8 +31,8 @@
 </template>
 
 <script setup>
-import {User, Position} from "@element-plus/icons-vue";
-import {reactive, ref, inject, onMounted} from 'vue';
+import {User} from "@element-plus/icons-vue";
+import {reactive, ref, onMounted} from 'vue';
 import {ElMessage} from 'element-plus';
 import request from "@/utils/request";
 import {useRoute} from 'vue-router';
@@ -71,12 +71,16 @@ function loadImages(userId) {
       imageList.forEach(imageObj => {
         request.get(`/secure/file/image`, {
           params: {
-            imageId: imageObj.id
+            imageId: imageObj.id,
           },
           responseType: 'blob'
         }).then(response => {
           const url = URL.createObjectURL(response.data);
-          images.value.push({id: imageObj.id, url});
+          images.value.push({
+            id: imageObj.id,
+            latitude: imageObj.latitude,
+            longitude: imageObj.longitude, url
+          });
           images.value.sort((a, b) => a.id - b.id); // 按 ID 排序
         }).catch(error => {
           ElMessage({
@@ -117,12 +121,15 @@ function goToMap(image) {
   router.push({
     path: '/map',
     query: {
-      id: image.id,
-      lat: image.lat,
-      lon: image.lon,
+      lat: image.latitude,
+      lng: image.longitude,
+      index: image.id,
     }
+  }).then(() => {
+    window.location.reload();
   });
 }
+
 </script>
 
 <style scoped>

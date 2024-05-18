@@ -28,7 +28,7 @@ watch(
 
 <template>
   <el-menu>
-    <el-sub-menu>
+    <el-sub-menu index="1">
       <template #title><span>地图功能</span></template>
       <el-menu-item>
         <el-checkbox v-model="props.modelValue.enableScrollWheelZoom" label="鼠标缩放"/>

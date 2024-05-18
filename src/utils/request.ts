@@ -2,9 +2,9 @@ import axios from 'axios';
 
 const request = axios.create({
     // baseURL: 'http://localhost:9091',
-    baseURL: 'http://192.168.43.105:9091',
+    baseURL: 'http://192.168.137.186:9091',
     // baseURL: 'http://192.168.43.215:9091',
-    timeout: 5000
+    timeout: 50000
 });
 
 // request 拦截器
