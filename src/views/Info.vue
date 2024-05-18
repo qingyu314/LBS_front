@@ -40,16 +40,16 @@
       <div class="image-container" v-for="image in images" :key="image.id">
         <el-card shadow="hover" body-style="padding: 10px" @mouseover="showButtons(image.id)"
                  @mouseleave="hideButtons(image.id)" @click="goToMap(image)">
-          <el-image :src="image.url" lazy class="image" />
-          <div class="overlay" v-if="image.showButtons" >
-            <el-button type="danger" :icon="Delete" size="large" @click="confirmDelete(image.id)" class="cover-button" />
+          <el-image :src="image.url" lazy class="image"/>
+          <div class="overlay" v-if="image.showButtons">
+            <el-button type="danger" :icon="Delete" size="large" @click.stop="confirmDelete(image.id)" class="cover-button"/>
           </div>
         </el-card>
       </div>
     </div>
-  <div class="footer">
-    <img src="/footer.png" alt="Footer Image" class="footer-image"/>
-  </div>
+    <div class="footer">
+      <img src="/footer.png" alt="Footer Image" class="footer-image"/>
+    </div>
   </el-card>
   <el-dialog title="确定要删除这张图片吗？" v-model="dialogVisible" width="300px" center>
       <span slot="footer" class="dialog-footer" style="display: flex; justify-content: center">
@@ -60,7 +60,7 @@
 </template>
 
 <script setup>
-import {User, Position, Delete} from "@element-plus/icons-vue";
+import {User, Delete} from "@element-plus/icons-vue";
 import {reactive, ref, inject, onMounted} from 'vue';
 import {ElMessage} from 'element-plus';
 import request from "@/utils/request";
@@ -106,6 +106,7 @@ function loadImages(userId) {
     if (res.data) {
       let imageList = res.data;
       imageList.forEach(imageObj => {
+        console.log(imageObj);
         request.get(`/secure/file/image`, {
           params: {
             imageId: imageObj.id
@@ -113,7 +114,13 @@ function loadImages(userId) {
           responseType: 'blob'
         }).then(response => {
           const url = URL.createObjectURL(response.data);
-          images.value.push({id: imageObj.id, url, showButtons: false});
+          images.value.push({
+            id: imageObj.id,
+            latitude: imageObj.latitude,
+            longitude: imageObj.longitude,
+            url,
+            showButtons: false
+          });
           images.value.sort((a, b) => a.id - b.id); // 按 ID 排序
         }).catch(error => {
           ElMessage({
@@ -269,12 +276,15 @@ function goToMap(image) {
   router.push({
     path: '/map',
     query: {
-      id: image.id,
-      lat: image.lat,
-      lng: image.lng,
+      lat: image.latitude,
+      lng: image.longitude,
+      index: image.id,
     }
+  }).then(() => {
+    window.location.reload();
   });
 }
+
 </script>
 
 <style scoped>

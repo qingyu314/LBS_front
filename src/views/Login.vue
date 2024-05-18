@@ -206,7 +206,7 @@ function signup() {
   background: white;
   display: flex;
   flex-direction: column;
-  padding: 10px;
+  padding: 20px 15px;
   gap:10px;
   user-select: none;
   backface-visibility: hidden;
