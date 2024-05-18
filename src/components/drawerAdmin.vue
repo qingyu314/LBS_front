@@ -8,12 +8,12 @@
   >
     <el-card>
       <div class="dropdown-container">
-        <el-dropdown v-if="isSameUser(cmtFirst.userId) && !inEdit[0]">
+        <el-dropdown>
           <span class="el-dropdown-link">
             <el-icon><MoreFilled/></el-icon>
           </span>
           <template #dropdown>
-              <el-dropdown-item>
+              <el-dropdown-item v-if="isSameUser(cmtFirst.userId) && !inEdit[0]">
                 <el-button type="info" @click="editComment(cmtFirst.comment, -1)">编辑</el-button>
               </el-dropdown-item>
               <el-dropdown-item>
@@ -52,12 +52,12 @@
     </el-card>
     <el-card v-for="(item,index) in cmtList" style="max-width: 600px">
       <div class="dropdown-container">
-        <el-dropdown v-if="isSameUser(item.userId) && !inEdit[index+1]">
+        <el-dropdown>
           <span class="el-dropdown-link">
             <el-icon><MoreFilled/></el-icon>
           </span>
           <template #dropdown>
-            <el-dropdown-item>
+            <el-dropdown-item v-if="isSameUser(item.userId) && !inEdit[index+1]">
               <el-button type="info" @click="editComment(item.comment, index)">编辑</el-button>
             </el-dropdown-item>
             <el-dropdown-item>

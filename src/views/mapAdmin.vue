@@ -188,10 +188,11 @@
               <el-form-item label="图片">
                 <el-image :src="showItem.imgUrl"/>
               </el-form-item>
-              <el-form-item size="small">
+              <el-form-item size="small" style="display: flex; justify-content: space-between;">
                 <el-button @click="enterComments(showItem.imageId, showItem.cmtId, showItem.userId, showItem.imgUrl)">
                   进入楼层
                 </el-button>
+                <el-button @click="deleteWhole" type="danger" :icon="Delete"></el-button>
               </el-form-item>
             </el-form>
           </BInfoWindow>
@@ -249,7 +250,17 @@
 
 <script lang="ts" setup>
 
-import {ChatDotSquare, Fold, Location, Notification, Plus, Setting, Guide, ArrowDown} from "@element-plus/icons-vue";
+import {
+  ChatDotSquare,
+  Fold,
+  Location,
+  Notification,
+  Plus,
+  Setting,
+  Guide,
+  ArrowDown,
+  Delete
+} from "@element-plus/icons-vue";
 import {onMounted, ref, type UnwrapRef, watch} from "vue";
 import {
   BCircle, BControl,
@@ -548,6 +559,28 @@ const handleSyncBackendChanges = (param1, param2) => {
   }
   getImgSec(param1, param2);
 };
+// 管理员在infoWindow删帖----------------------------------------------------------------------------------------------
+const deleteWhole = (imageId: number) => {
+  request.delete(`/secure/file/image/delete`, {
+    params: {
+      imageId: imageId,
+    }
+  }).then(res => {
+    if (res.data.code === '0') {
+      ElMessage({
+        type: 'success',
+        message: '删除成功',
+      })
+    } else {
+      ElMessage({
+        type: 'error',
+        message: res.data.msg,
+      })
+    }
+  }).finally(() => {
+    getImgSec()
+  })
+}
 // 从外部获取坐标进入界面-------------------------------------------------------------------------------------------
 const route = useRoute();
 const useOuterPoint = ref<boolean>(false)

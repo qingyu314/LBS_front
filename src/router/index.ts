@@ -7,6 +7,7 @@ import mapPoint from "@/views/mapPoint.vue";
 import Header from "@/components/Header.vue";
 import userDetail from "@/views/userDetail.vue";
 import POIMap from "@/views/POIMap.vue";
+import mapAdmin from "@/views/mapAdmin.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,6 +32,11 @@ const router = createRouter({
                     path: 'mapPoint',
                     name: 'mapPoint',
                     component: mapPoint
+                },
+                {
+                    path: 'mapAdmin',
+                    name: 'mapAdmin',
+                    component: mapAdmin
                 },
                 {
                     path: "/info",
