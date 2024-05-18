@@ -187,10 +187,12 @@
                 </el-icon>
                 <el-text @click="jumpUser(showItem.userId)" class="form-text">{{ showItem.username }}</el-text>
               </div>
-              <el-button @click="enterComments(showItem.imageId, showItem.cmtId, showItem.userId, showItem.imgUrl)"
-                         class="form-button">
+              <el-button-group><el-button @click="enterComments(showItem.imageId, showItem.cmtId, showItem.userId, showItem.imgUrl)"
+                                          class="form-button">
                 进入楼层
               </el-button>
+                <el-button @click="deleteWhole" type="danger" :icon="Delete"></el-button></el-button-group>
+
             </div>
           </BInfoWindow>
         </template>
@@ -239,7 +241,12 @@
       </el-dialog>
     </div>
     <div v-if="drawer">
-      <cmtDrawer v-model:drawer="drawer" v-bind:info="drawerInfo" @syncBackendChanges="handleSyncBackendChanges"/>
+      <div v-if="!isAdmin()">
+        <cmtDrawer v-model:drawer="drawer" v-bind:info="drawerInfo" @syncBackendChanges="handleSyncBackendChanges"/>
+      </div>
+      <div v-else>
+        <drawer-admin v-model:drawer="drawer" v-bind:info="drawerInfo" @syncBackendChanges="handleSyncBackendChanges"/>
+      </div>
     </div>
 
   </div>
@@ -256,7 +263,7 @@ import {
   Setting,
   Guide,
   ArrowDown,
-  User
+  User, Delete
 } from "@element-plus/icons-vue";
 import {onMounted, ref, type UnwrapRef, watch} from "vue";
 import {
@@ -278,6 +285,7 @@ import MapOption from "@/components/mapOption.vue";
 import CmtDrawer from "@/components/cmtDrawer.vue";
 
 import '/src/assets/css/bdMapPage.css'
+import DrawerAdmin from "@/components/drawerAdmin.vue";
 // 初始化-------------------------------------------------------------------------
 let authHeaders = {
   Authorization: sessionStorage.getItem("token")
@@ -580,6 +588,31 @@ const handleSyncBackendChanges = (param1, param2) => {
   }
 
 };
+// 管理员在infoWindow删帖----------------------------------------------------------------------------------------------
+const isAdmin = () => {
+  return parseInt(sessionStorage.getItem("id") as string, 10) == 1
+}
+const deleteWhole = (imageId: number) => {
+  request.delete(`/secure/file/image/delete`, {
+    params: {
+      imageId: imageId,
+    }
+  }).then(res => {
+    if (res.data.code === '0') {
+      ElMessage({
+        type: 'success',
+        message: '删除成功',
+      })
+    } else {
+      ElMessage({
+        type: 'error',
+        message: res.data.msg,
+      })
+    }
+  }).finally(() => {
+    getImgSec()
+  })
+}
 // 从外部获取坐标进入界面-------------------------------------------------------------------------------------------
 const route = useRoute();
 const useOuterPoint = ref<boolean>(false)
