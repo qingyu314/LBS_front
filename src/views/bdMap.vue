@@ -40,7 +40,7 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item style="height: 200px">
-                  <el-slider v-model="distance" show-input size="small" vertical max="40000"/>
+                  <el-slider v-model="distance" max="40000" show-input size="small" vertical/>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -155,7 +155,7 @@
               :content="`地址: ${result?.address} 所属商圈:${result?.business} 最匹配地点: ${
             result?.surroundingPois[0]?.title || '无'
           }`"
-              :position="result.point"
+              :position="<Point>result?.point"
               :visible="visible"
               style="color: #333; font-size: 9px"
           />
@@ -221,7 +221,7 @@
             :on-preview="handlePictureCardPreview"
             :on-remove="handleRemove"
             :on-success="handleSuccess"
-            action="http://192.168.43.105:9091/secure/file/upload"
+            action="http://localhost:9091/secure/file/upload"
             drag="true"
             list-type="picture-card"
             multiple
@@ -257,9 +257,9 @@ import {
   BLabel,
   BMap,
   BMarker,
-  type MapType,
+  type MapType, type Point,
   type PointGeocoderResult,
-  useBrowserLocation,
+  useBrowserLocation, type UseBrowserLocationOptions,
   usePointGeocoder,
 } from "vue3-baidu-map-gl";
 import request from "@/utils/request";
@@ -314,21 +314,26 @@ interface pointClass {
   lng: number
 }
 
+const locOption: UseBrowserLocationOptions = {
+  enableHighAccuracy: true, // 设置为true以启用高精度定位
+  enableSDKLocation: true
+};
 let point = ref<pointClass>({lng: 116.30793520652882, lat: 40.05861561613348})
 let centerPoint = ref<pointClass | null>(null)
-const {get: getLoc, location, isLoading: isLoadingLoc, isError, status} = useBrowserLocation(null, () => {
+const {get: getLoc, location, isLoading: isLoadingLoc, isError, status} = useBrowserLocation(locOption, () => {
   useOuterPoint.value = false
   centerPoint.value = location.value.point
   map.value.resetCenter()
 })
 
 function handleInitd() {
+  debugger
   if (useOuterPoint.value) {
-    debugger
     centerPoint.value = selectedPoint.value
     point.value = selectedPoint.value
     map.value.resetCenter()
     getGeo(centerPoint.value)
+    debugger
     getImgSec(true, <number>selectedImgIdx.value)
     visible.value = false
   } else {
@@ -425,9 +430,10 @@ const position = ref({
   lat: 0,
   lng: 0,
 })
-const showDot = ref<boolean>(true)// 在下面用到的
+const showDot = ref<boolean>(false)// 在下面用到的
 const loadImgDot = ref<boolean>(true)
 const getImgSec = async (option: boolean = false, imageId: number = 0) => {
+  showDot.value = false;
   loadImgDot.value = true
   cardList.value = []
   try {
@@ -485,14 +491,28 @@ const getImgSec = async (option: boolean = false, imageId: number = 0) => {
     console.error('Error:', error);
   } finally {
     console.log(cardList.value);
-    if (!option) {
-      position.value = cardList.value[0].position;
-      showItem.value = JSON.parse(JSON.stringify(cardList.value[0]));
-    } else {
+    if (cardList.value.length == 0) {
+      showItem.value = {
+        cmtId: 0,
+        userId: 0,
+        username: '',
+        comment: '',
+        imgUrl: '',
+        imageId: 0,
+        position: {lat: 0, lng: 0},
+      }
+      showDot.value = false;
       debugger
-      const imgIdx = cardList.value.findIndex(card => card.imageId === imageId)
-      position.value = cardList.value[imgIdx].position;
-      showItem.value = JSON.parse(JSON.stringify(cardList.value[imgIdx]));
+    } else {
+      if (!option) {
+        position.value = cardList.value[0].position;
+        showItem.value = JSON.parse(JSON.stringify(cardList.value[0]));
+      } else {
+        const imgIdx = cardList.value.findIndex(card => card.imageId === imageId)
+        position.value = cardList.value[imgIdx].position;
+        showItem.value = JSON.parse(JSON.stringify(cardList.value[imgIdx]));
+      }
+      showDot.value = true;
     }
     loadImgDot.value = false;
   }
@@ -546,7 +566,10 @@ const handleSyncBackendChanges = (param1, param2) => {
   if (param1 === undefined || param1 === null) {
     getImgSec();
   }
-  getImgSec(param1, param2);
+  else{
+    getImgSec(param1, param2);
+  }
+
 };
 // 从外部获取坐标进入界面-------------------------------------------------------------------------------------------
 const route = useRoute();
@@ -557,8 +580,7 @@ const selectedPoint = ref({
 })
 const selectedImgIdx = ref<number | null>(0)
 onMounted(() => {
-  const {lat, lng, index} = route.query;
-
+  const {lat, lng, int} = route.query;
   if (lat && lng) {
     debugger
     useOuterPoint.value = true
@@ -566,7 +588,7 @@ onMounted(() => {
       lat: parseFloat(lat as string),
       lng: parseFloat(lng as string)
     };
-    selectedImgIdx.value = index
+    selectedImgIdx.value = parseInt(int,10)
   } else {
     useOuterPoint.value = false
   }
