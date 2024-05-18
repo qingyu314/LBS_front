@@ -187,11 +187,13 @@
                 </el-icon>
                 <el-text @click="jumpUser(showItem.userId)" class="form-text">{{ showItem.username }}</el-text>
               </div>
-              <el-button-group><el-button @click="enterComments(showItem.imageId, showItem.cmtId, showItem.userId, showItem.imgUrl)"
+              <el-button-group>
+                <el-button @click="enterComments(showItem.imageId, showItem.cmtId, showItem.userId, showItem.imgUrl)"
                                           class="form-button">
                 进入楼层
-              </el-button>
-                <el-button @click="deleteWhole" type="danger" :icon="Delete"></el-button></el-button-group>
+                </el-button>
+                <el-button v-if="isAdmin()" @click="()=>deleteWhole(showItem.imageId)" type="danger" :icon="Delete"></el-button>
+              </el-button-group>
 
             </div>
           </BInfoWindow>
