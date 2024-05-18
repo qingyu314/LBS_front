@@ -39,11 +39,10 @@
     <div class="image-record">
       <div class="image-container" v-for="image in images" :key="image.id">
         <el-card shadow="hover" body-style="padding: 10px" @mouseover="showButtons(image.id)"
-                 @mouseleave="hideButtons(image.id)">
-          <img :src="image.url" :alt="'Image ' + image.id" class="image"/>
-          <div class="overlay" v-if="image.showButtons">
-            <el-button type="primary" plain :icon="Position" size="large" @click="goToMap(image)" class="cover-button" />
-            <el-button type="danger" plain :icon="Delete" size="large" @click="confirmDelete(image.id)" class="cover-button" />
+                 @mouseleave="hideButtons(image.id)" @click="goToMap(image)">
+          <el-image :src="image.url" lazy class="image" />
+          <div class="overlay" v-if="image.showButtons" >
+            <el-button type="danger" :icon="Delete" size="large" @click="confirmDelete(image.id)" class="cover-button" />
           </div>
         </el-card>
       </div>
@@ -65,9 +64,10 @@ import {User, Position, Delete} from "@element-plus/icons-vue";
 import {reactive, ref, inject, onMounted} from 'vue';
 import {ElMessage} from 'element-plus';
 import request from "@/utils/request";
-import {useRouter} from 'vue-router';
+import router from "@/router";
 
-const router = useRouter();
+import '/src/assets/css/userPage.css'
+
 let editing = ref(false);
 let dialogVisible = ref(false);
 let selectedImageId = ref(null);
@@ -278,110 +278,5 @@ function goToMap(image) {
 </script>
 
 <style scoped>
-.profile-header {
-  position: relative;
-  height: 350px;
-  background-color: #ccc;
-}
 
-.cover-photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profile-content {
-  display: flex;
-  align-items: flex-end;
-  padding: 20px;
-}
-
-.user-info {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  gap: 10px;
-}
-
-.username {
-  margin: 0;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.edit-form {
-  padding: 20px;
-}
-
-.form-item {
-  margin-bottom: 20px;
-  width: 100%;
-}
-
-.input-right input {
-  text-align: right;
-}
-
-.form-actions {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.image-record {
-  column-count: 2;
-  column-gap: 10px;
-}
-
-.image-container {
-  position: relative;
-  text-align: center;
-  border-radius: 16px;
-  grid-row-start: auto;
-  margin-bottom: 20px;
-  break-inside: avoid;
-}
-
-.image {
-  width: 100%;
-  height: auto;
-  border-radius: 4px;
-}
-
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(145deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1));
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  padding-top: 15px;
-  padding-right: 20px;
-  gap: 10px;
-  opacity: 0;
-  border-radius: 4px;
-}
-
-.image-container:hover .overlay {
-  opacity: 1;
-}
-
-.cover-button {
-  width: 2vw;
-  height: 2vw;
-  border-radius: 25%;
-  opacity: 0.75;
-}
-
-.footer {
-  width: 100%;
-  text-align: center;
-}
-
-.footer-image {
-  width: 40%;
-}
 </style>
