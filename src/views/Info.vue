@@ -16,19 +16,19 @@
       </div>
       <div v-if="editing" class="edit-form">
         <el-form-item label="用户名" class="form-item">
-          <el-input v-model="form.username" class="input-right"/>
+          <el-input v-model="form.username"/>
         </el-form-item>
         <el-form-item label="原密码" class="form-item">
-          <el-input v-model="form.oldPassword" show-password class="input-right"/>
+          <el-input v-model="form.oldPassword" show-password/>
         </el-form-item>
         <el-form-item label="新密码" class="form-item">
-          <el-input v-model="form.password" show-password class="input-right" :disabled="!form.oldPassword"/>
+          <el-input v-model="form.password" show-password :disabled="!form.oldPassword"/>
         </el-form-item>
         <el-form-item label="确认新密码" class="form-item">
-          <el-input v-model="form.confirmPassword" show-password class="input-right" :disabled="!form.oldPassword"/>
+          <el-input v-model="form.confirmPassword" show-password :disabled="!form.oldPassword"/>
         </el-form-item>
         <el-form-item label="个人介绍" class="form-item">
-          <el-input v-model="form.introduction" class="input-right"/>
+          <el-input v-model="form.introduction"/>
         </el-form-item>
         <div class="form-actions">
           <el-button type="primary" @click="update">保存</el-button>
@@ -51,25 +51,18 @@
       <img src="/footer.png" alt="Footer Image" class="footer-image"/>
     </div>
   </el-card>
-  <el-dialog title="确定要删除这张图片吗？" v-model="dialogVisible" width="300px" center>
-      <span slot="footer" class="dialog-footer" style="display: flex; justify-content: center">
-        <el-button type="primary" @click="deleteImage">确定</el-button>
-        <el-button @click="dialogVisible = false">取消</el-button>
-      </span>
-  </el-dialog>
 </template>
 
 <script setup>
 import {User, Delete} from "@element-plus/icons-vue";
 import {reactive, ref, inject, onMounted} from 'vue';
-import {ElMessage} from 'element-plus';
+import {ElMessage, ElMessageBox} from 'element-plus';
 import request from "@/utils/request";
 import router from "@/router";
 
 import '/src/assets/css/userPage.css'
 
 let editing = ref(false);
-let dialogVisible = ref(false);
 let selectedImageId = ref(null);
 let images = ref([]);
 let form = reactive({
@@ -144,8 +137,25 @@ function loadImages(userId) {
 }
 
 function confirmDelete(imageId) {
-  selectedImageId.value = imageId;
-  dialogVisible.value = true;
+  ElMessageBox.confirm(
+    '此操作将永久删除图片及其所有评论，是否继续？',
+    '删除图片',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  )
+    .then(() => {
+      selectedImageId.value = imageId;
+      deleteImage();
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '删除取消',
+      })
+    })
 }
 
 function deleteImage() {
@@ -161,7 +171,6 @@ function deleteImage() {
         message: "删除成功"
       });
       images.value = images.value.filter(image => image.id !== selectedImageId.value);
-      dialogVisible.value = false;
     } else {
       ElMessage({
         type: "error",

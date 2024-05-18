@@ -1,6 +1,43 @@
+.post-window {
+  max-width: 400px !important;
+  height: auto !important;
+  margin: auto !important;
+}
+
 .post-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  margin: 0 10px 0 5px;
+  margin: 0 10px 10px 5px;
+  gap: 10px;
+  align-items: flex-start !important;
+}
+
+.post-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  transition: box-shadow 0.3s ease-in-out; /* 添加过渡效果 */
+}
+
+.post-image:hover {
+  cursor: zoom-in;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3); /* 悬浮时的阴影效果 */
+}
+
+.post-bottom {
+  display: flex;
+  width: 100%;
+}
+
+.post-user {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  cursor: pointer
+}
+
+.post-text {
+  font-size: 18px !important;
+  text-align: left !important;
+  margin-left: 8px !important;
 }

@@ -119,7 +119,7 @@ import {
 } from 'vue3-baidu-map-gl'
 import request from "@/utils/request";
 import {ArrowDown, ChatDotSquare, Fold, Guide, Setting} from "@element-plus/icons-vue";
-import MapOption from "@/components/mapOption.vue";
+import MapOption from "@/components/MapOption.vue";
 // 给每个点进行坐标转换--------------------------------------------------------------------------------------------------
 // const { result, convert, isLoading, isError, status } = usePointConvertor()
 const type = ref<MapType>('BMAP_NORMAL_MAP')

@@ -177,24 +177,17 @@
               :position="position"
               enableAutoPan
               enableCloseOnClick
+              class="post-window"
           >
             <div v-if="!loadImgDot" class="post-container">
-              <el-image :src="showItem.imgUrl" class="form-image"/>
-              <el-text class="form-text">{{ showItem.comment }}</el-text>
-              <div class="post-user">
-                <el-icon>
-                  <User/>
-                </el-icon>
-                <el-text @click="jumpUser(showItem.userId)" class="form-text">{{ showItem.username }}</el-text>
+              <el-image :src="showItem.imgUrl" class="post-image"
+                        @click="enterComments(showItem.imageId, showItem.cmtId, showItem.userId, showItem.imgUrl)"/>
+              <div class="post-text">{{ showItem.comment }}</div>
+              <div class="post-bottom">
+                <UserAvatar :username="showItem.username" :userId="showItem.userId" :size="35" />
+                <div style="flex: 1"></div>
+                <el-button text v-if="isAdmin()" @click="()=>deleteWhole(showItem.imageId)" :icon="Delete"/>
               </div>
-              <el-button-group>
-                <el-button @click="enterComments(showItem.imageId, showItem.cmtId, showItem.userId, showItem.imgUrl)"
-                                          class="form-button">
-                进入楼层
-                </el-button>
-                <el-button v-if="isAdmin()" @click="()=>deleteWhole(showItem.imageId)" type="danger" :icon="Delete"></el-button>
-              </el-button-group>
-
             </div>
           </BInfoWindow>
         </template>
@@ -223,7 +216,7 @@
             :on-preview="handlePictureCardPreview"
             :on-remove="handleRemove"
             :on-success="handleSuccess"
-            action="http://localhost:9091/secure/file/upload"
+            action="http://192.168.137.186:9091/secure/file/upload"
             drag="true"
             list-type="picture-card"
             multiple
@@ -265,9 +258,9 @@ import {
   Setting,
   Guide,
   ArrowDown,
-  User, Delete
+  UserFilled, Delete
 } from "@element-plus/icons-vue";
-import {onMounted, ref, type UnwrapRef, watch} from "vue";
+import {computed, onMounted, ref, type UnwrapRef, watch} from "vue";
 import {
   BCircle, BControl,
   BInfoWindow,
@@ -283,11 +276,12 @@ import request from "@/utils/request";
 import {ElMessage, type UploadInstance, type UploadProps, type UploadUserFile} from "element-plus";
 import router from "@/router";
 import {useRoute} from "vue-router";
-import MapOption from "@/components/mapOption.vue";
-import CmtDrawer from "@/components/cmtDrawer.vue";
+import UserAvatar from "@/components/UserAvatar.vue";
+import MapOption from "@/components/MapOption.vue";
+import CmtDrawer from "@/components/CmtDrawer.vue";
 
 import '/src/assets/css/bdMapPage.css'
-import DrawerAdmin from "@/components/drawerAdmin.vue";
+import DrawerAdmin from "@/components/DrawerAdmin.vue";
 // 初始化-------------------------------------------------------------------------
 let authHeaders = {
   Authorization: sessionStorage.getItem("token")
@@ -553,15 +547,6 @@ function clickDot(item: UnwrapRef<typeof cardList>[0], event: MouseEvent) {
   position.value = item.position
   showItem.value = JSON.parse(JSON.stringify(item))
   showDot.value = true
-}
-
-// 跳转到用户详情页----------------------------------------------------------------------------------
-function jumpUser(id: number) {
-  if (id == parseInt(sessionStorage.getItem("id") as string, 10)) {
-    router.push('/info')
-  } else {
-    router.push('/userDetail/' + String(id))
-  }
 }
 
 // 进入楼层--------------------------------------------------------------------------------------------------------

@@ -2,9 +2,9 @@ import {createRouter, createWebHistory} from 'vue-router'
 import Login from "@/views/Login.vue";
 import Info from "@/views/Info.vue";
 import bdMap from "@/views/bdMap.vue";
-import mapPoint from "@/views/mapPoint.vue";
+import MapPoint from "@/views/MapPoint.vue";
 import Header from "@/components/Header.vue";
-import userDetail from "@/views/userDetail.vue";
+import UserDetail from "@/views/UserDetail.vue";
 import POIMap from "@/views/POIMap.vue";
 
 const router = createRouter({
@@ -29,7 +29,7 @@ const router = createRouter({
                 {
                     path: 'mapPoint',
                     name: 'mapPoint',
-                    component: mapPoint
+                    component: MapPoint
                 },
                 {
                     path: "/info",
@@ -39,7 +39,7 @@ const router = createRouter({
                 {
                     path: "/userDetail/:id",  // userDetail/id
                     name: "userDetail",
-                    component: userDetail
+                    component: UserDetail
                 },
             ]
         },
@@ -52,13 +52,8 @@ const router = createRouter({
             }
         },
         {
-            path:'*',
-            name:'404',
-            component: ()=>import('@/views/404.vue'),
-            meta: {
-                requireAuth: false
-            }
-
+            path: '/:pathMatch(.*)*', // 捕获所有未定义的路径
+            name: '404', component: () => import('@/views/404.vue'), meta: {requireAuth: false}
         }
     ]
 })

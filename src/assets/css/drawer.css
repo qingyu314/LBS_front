@@ -1,0 +1,46 @@
+.drawer-post-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.delete-post-btn {
+  width: 20px;
+  margin: auto 0 auto auto;
+}
+
+.drawer-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.drawer-post-content {
+  display: flex;
+  margin: 0 10px;
+}
+
+.cmt-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cmt-button-group {
+  display: flex;
+  margin: 0 10px;
+}
+
+.post-comment {
+  font-size: 20px !important;
+}
+
+.comment-input-container {
+  display: flex;
+  align-items: center; /* 垂直居中 */
+}
+
+.comment-input-container .el-input {
+  flex: 1; /* 输入框占据剩余空间 */
+  margin-right: 10px; /* 右侧留出一些间距 */
+}
