@@ -40,7 +40,7 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item style="height: 200px">
-                  <el-slider v-model="distance" max="40000" show-input size="small" vertical/>
+                  <el-slider v-model="distance" :max="40000" show-input size="small" vertical/>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -178,22 +178,20 @@
               enableAutoPan
               enableCloseOnClick
           >
-            <el-form v-if="!loadImgDot" label-width="auto" style="max-width: 600px">
-              <el-form-item label="Name">
-                <el-text @click="jumpUser(showItem.userId)">{{ showItem.username }}</el-text>
-              </el-form-item>
-              <el-form-item label="评论">
-                <el-text>{{ showItem.comment }}</el-text>
-              </el-form-item>
-              <el-form-item label="图片">
-                <el-image :src="showItem.imgUrl"/>
-              </el-form-item>
-              <el-form-item size="small">
-                <el-button @click="enterComments(showItem.imageId, showItem.cmtId, showItem.userId, showItem.imgUrl)">
-                  进入楼层
-                </el-button>
-              </el-form-item>
-            </el-form>
+            <div v-if="!loadImgDot" class="post-container">
+              <el-image :src="showItem.imgUrl" class="form-image"/>
+              <el-text class="form-text">{{ showItem.comment }}</el-text>
+              <div class="post-user">
+                <el-icon>
+                  <User/>
+                </el-icon>
+                <el-text @click="jumpUser(showItem.userId)" class="form-text">{{ showItem.username }}</el-text>
+              </div>
+              <el-button @click="enterComments(showItem.imageId, showItem.cmtId, showItem.userId, showItem.imgUrl)"
+                         class="form-button">
+                进入楼层
+              </el-button>
+            </div>
           </BInfoWindow>
         </template>
         <BControl :offset="{ x: 0, y: 0 }" anchor="BMAP_ANCHOR_TOP_RIGHT"
@@ -249,7 +247,17 @@
 
 <script lang="ts" setup>
 
-import {ChatDotSquare, Fold, Location, Notification, Plus, Setting, Guide, ArrowDown} from "@element-plus/icons-vue";
+import {
+  ChatDotSquare,
+  Fold,
+  Location,
+  Notification,
+  Plus,
+  Setting,
+  Guide,
+  ArrowDown,
+  User
+} from "@element-plus/icons-vue";
 import {onMounted, ref, type UnwrapRef, watch} from "vue";
 import {
   BCircle, BControl,
@@ -268,6 +276,8 @@ import router from "@/router";
 import {useRoute} from "vue-router";
 import MapOption from "@/components/mapOption.vue";
 import CmtDrawer from "@/components/cmtDrawer.vue";
+
+import '/src/assets/css/bdMapPage.css'
 // 初始化-------------------------------------------------------------------------
 let authHeaders = {
   Authorization: sessionStorage.getItem("token")
@@ -327,13 +337,13 @@ const {get: getLoc, location, isLoading: isLoadingLoc, isError, status} = useBro
 })
 
 function handleInitd() {
-  debugger
+  // debugger
   if (useOuterPoint.value) {
     centerPoint.value = selectedPoint.value
     point.value = selectedPoint.value
     map.value.resetCenter()
     getGeo(centerPoint.value)
-    debugger
+    // debugger
     getImgSec(true, <number>selectedImgIdx.value)
     visible.value = false
   } else {
@@ -502,7 +512,7 @@ const getImgSec = async (option: boolean = false, imageId: number = 0) => {
         position: {lat: 0, lng: 0},
       }
       showDot.value = false;
-      debugger
+      // debugger
     } else {
       if (!option) {
         position.value = cardList.value[0].position;
@@ -565,8 +575,7 @@ const handleSyncBackendChanges = (param1, param2) => {
   // 检查参数是否为 undefined
   if (param1 === undefined || param1 === null) {
     getImgSec();
-  }
-  else{
+  } else {
     getImgSec(param1, param2);
   }
 
@@ -580,15 +589,15 @@ const selectedPoint = ref({
 })
 const selectedImgIdx = ref<number | null>(0)
 onMounted(() => {
-  const {lat, lng, int} = route.query;
+  const {lat, lng, index} = route.query;
   if (lat && lng) {
-    debugger
+    // debugger
     useOuterPoint.value = true
     selectedPoint.value = {
       lat: parseFloat(lat as string),
       lng: parseFloat(lng as string)
     };
-    selectedImgIdx.value = parseInt(int,10)
+    selectedImgIdx.value = parseInt(index, 10)
   } else {
     useOuterPoint.value = false
   }
