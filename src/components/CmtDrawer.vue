@@ -6,89 +6,46 @@
       title="I am the title"
       @update:model-value="updateDrawer"
   >
-    <el-card>
-      <div class="dropdown-container">
-        <el-dropdown v-if="isSameUser(cmtFirst.userId) && !inEdit[0]">
-          <span class="el-dropdown-link">
-            <el-icon><MoreFilled/></el-icon>
-          </span>
-          <template #dropdown>
-              <el-dropdown-item>
-                <el-button type="info" @click="editComment(cmtFirst.comment, -1)">编辑</el-button>
-              </el-dropdown-item>
-              <el-dropdown-item>
-                <el-button type="danger" @click="deleteWhole()">删除</el-button>
-              </el-dropdown-item>
-          </template>
-        </el-dropdown>
+    <div class="drawer-post-container">
+      <el-image :src="info.imgUrl" class="drawer-image"/>
+        <el-button plain type="danger" v-if="isSameUser(cmtFirst.userId) && !inEdit[0]" @click="confirmDeleteWhole"
+                   :icon="Delete" class="delete-post-btn"/>
+        <UserAvatar :username="cmtFirst.username" :userId="cmtFirst.userId" :size="30"/>
+      <div class="drawer-post-content">
+        <template v-if="inEdit[0]">
+          <el-input v-model="storeComment[0]" class="post-comment"></el-input>
+        </template>
+        <template v-else>
+          <el-text class="post-comment">{{ cmtFirst.comment }}</el-text>
+        </template>
+        <el-button text v-if="isSameUser(cmtFirst.userId) && !inEdit[0]" @click="editComment(cmtFirst.comment, -1)"
+                   :icon="Edit" size="large"/>
       </div>
-
-      <el-form
-          :label-position="labelPosition"
-          :model="cmtFirst"
-          label-width="auto"
-          style="max-width: 600px"
-      >
-        <el-form-item>
-          <el-text size="large">{{ cmtFirst.username }}</el-text>
-        </el-form-item>
-        <el-form-item>
-          <template v-if="inEdit[0]">
-            <el-input v-model="storeComment[0]"></el-input>
-          </template>
-          <template v-else>
-            <el-text>{{ cmtFirst.comment }}</el-text>
-          </template>
-
-        </el-form-item>
-        <el-form-item v-if="isSameUser(cmtFirst.userId) && inEdit[0]">
-          <el-button @click="saveComment(cmtFirst.cmtId, storeComment[0], -1)">保存</el-button>
-          <el-button type="danger" @click="discardEdit(-1)">丢弃</el-button>
-        </el-form-item>
-        <el-form-item>
-          <el-image :src="info.imgUrl"/>
-        </el-form-item>
-      </el-form>
-    </el-card>
-    <el-card v-for="(item,index) in cmtList" style="max-width: 600px">
-      <div class="dropdown-container">
-        <el-dropdown v-if="isSameUser(item.userId) && !inEdit[index+1]">
-          <span class="el-dropdown-link">
-            <el-icon><MoreFilled/></el-icon>
-          </span>
-          <template #dropdown>
-            <el-dropdown-item>
-              <el-button type="info" @click="editComment(item.comment, index)">编辑</el-button>
-            </el-dropdown-item>
-            <el-dropdown-item>
-              <el-button type="danger" @click="deleteComment(item.cmtId)">删除</el-button>
-            </el-dropdown-item>
-          </template>
-        </el-dropdown>
+      <div class="cmt-button-group" v-if="isSameUser(cmtFirst.userId) && inEdit[0]">
+        <el-button text type="primary" @click="saveComment(cmtFirst.cmtId, storeComment[0], -1)">保存</el-button>
+        <el-button text @click="discardEdit(-1)">取消</el-button>
       </div>
-      <el-form
-          :label-position="labelPosition"
-          :model="item"
-          label-width="auto"
-          style="max-width: 600px"
-      >
-        <el-form-item>
-          <el-text size="large">{{ item.username }}</el-text>
-        </el-form-item>
-        <el-form-item>
-          <template v-if="inEdit[index+1]">
-            <el-input v-model="storeComment[index+1]"></el-input>
-          </template>
-          <template v-else>
-            <el-text>{{ item.comment }}</el-text>
-          </template>
-        </el-form-item>
-        <el-form-item v-if="isSameUser(item.userId) && inEdit[index+1]">
-          <el-button @click="saveComment(item.cmtId, storeComment[index+1], index)">保存</el-button>
-          <el-button type="danger" @click="discardEdit(index)">丢弃</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    </div>
+    <div v-for="(item,index) in cmtList" :key="item.cmtId" class="cmt-container">
+      <el-divider/>
+      <UserAvatar :username="item.username" :userId="item.userId" :size="30"/>
+      <div class="drawer-post-content">
+      <template v-if="inEdit[index+1]">
+        <el-input v-model="storeComment[index+1]" class="post-comment"></el-input>
+      </template>
+      <template v-else>
+        <el-text class="post-comment">{{ item.comment }}</el-text>
+      </template>
+        <el-button text type="info" v-if="isSameUser(item.userId) && !inEdit[index+1]" @click="editComment(item.comment, index)" :icon="Edit" size="large"/>
+        <div style="flex: 1"></div>
+        <el-button text type="danger" v-if="isSameUser(item.userId) && !inEdit[index+1]" @click="confirmDeleteComment(item.cmtId)" :icon="Delete" size="large"/>
+      </div>
+      <div class="cmt-button-group" v-if="isSameUser(item.userId) && inEdit[index+1]">
+        <el-button text type="primary" @click="saveComment(item.cmtId, storeComment[index+1], index)">保存
+        </el-button>
+        <el-button text @click="discardEdit(index)">取消</el-button>
+      </div>
+    </div>
     <template #footer style="display: inline-block">
       <div class="comment-input-container">
         <el-input v-model="newComment" placeholder="请输入评论内容"></el-input>
@@ -100,11 +57,15 @@
 
 <script lang="ts" setup>
 import {ref, onMounted, watch} from 'vue';
-import {MoreFilled} from '@element-plus/icons-vue'
+import {Delete, Edit} from '@element-plus/icons-vue';
 import request from "@/utils/request";
-import {ElMessage, type FormProps} from "element-plus";
+import {ElMessage, ElMessageBox, type FormProps} from "element-plus";
+
+import '/src/assets/css/drawer.css'
+import UserAvatar from "@/components/UserAvatar.vue";
+
 // 一些定义---------------------------------------------------------------
-const labelPosition = ref<FormProps['labelPosition']>('left')
+const labelPosition = ref<FormProps['labelPosition']>('left');
 
 interface Info {
   cmtId: number,
@@ -225,6 +186,27 @@ const editComment = (comment: string, index: number) => {
   storeComment.value[index + 1] = comment
 };
 
+const confirmDeleteComment = (id: number) => {
+  ElMessageBox.confirm(
+      '此操作将永久删除该条评论，是否继续？',
+      '删除评论',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+  )
+      .then(() => {
+        deleteComment(id);
+      })
+      .catch(() => {
+        ElMessage({
+          type: 'info',
+          message: '删除取消',
+        })
+      })
+};
+
 const deleteComment = (id: number) => {
   request.delete(`/secure/file/comment/delete`, {
     params: {
@@ -247,6 +229,7 @@ const deleteComment = (id: number) => {
     }
   })
 }
+
 const discardEdit = (index: number) => {
   storeComment.value[index + 1] = ''
   inEdit.value[index + 1] = false
@@ -268,11 +251,33 @@ const saveComment = (commentId: number, newComment: string, index: number) => {
     inEdit.value[index + 1] = false;
     if (index == -1) {
       // 在需要同步后台更改的地方
-      emit('syncBackendChanges',true,info?.imageId);
+      emit('syncBackendChanges', true, info?.imageId);
     }
   });
 };
+
 // 对整个帖子的操作----------------------------------------------------------------------------------------------------
+const confirmDeleteWhole = () => {
+  ElMessageBox.confirm(
+      '此操作将永久删除该图片及其所有评论，是否继续？',
+      '删除图片',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+  )
+      .then(() => {
+        deleteWhole();
+      })
+      .catch(() => {
+        ElMessage({
+          type: 'info',
+          message: '删除取消',
+        })
+      })
+};
+
 const deleteWhole = () => {
   request.delete(`/secure/file/image/delete`, {
     params: {
@@ -295,31 +300,4 @@ const deleteWhole = () => {
     updateDrawer(false);
   })
 }
-
-
 </script>
-<style scoped>
-.comment-input-container {
-  display: flex;
-  align-items: center; /* 垂直居中 */
-}
-
-.comment-input-container .el-input {
-  flex: 1; /* 输入框占据剩余空间 */
-  margin-right: 10px; /* 右侧留出一些间距 */
-}
-
-.el-dropdown-link {
-  cursor: pointer;
-  color: var(--el-color-primary);
-  display: flex;
-  align-items: center;
-}
-
-.dropdown-container {
-  position: relative;
-  float: right; /* 将元素浮动到右侧 */
-  margin-top: 5px; /* 调整垂直位置 */
-  margin-right: 10px; /* 调整水平位置 */
-}
-</style>

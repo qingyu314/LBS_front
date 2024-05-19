@@ -1,6 +1,84 @@
-.post-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin: 0 10px 0 5px;
+.location-container {
+    background: rgba(255, 255, 255, 0.5); /* 半透明白色背景 */
+    border-radius: 15px; /* 圆角 */
+    backdrop-filter: blur(10px); /* 磨砂效果 */
+    -webkit-backdrop-filter: blur(10px); /* 兼容性处理 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
+    z-index: 99;
+
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 20px;
+    color: #333;
 }
+
+.location-header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    font-size: 24px;
+    color: #666;
+
+}
+
+.post-window {
+    max-width: 400px !important;
+    height: auto !important;
+    margin: auto !important;
+}
+
+.post-container {
+    display: flex;
+    flex-direction: column;
+    margin: 0 10px 20px 5px;
+    gap: 10px;
+    align-items: flex-start !important;
+}
+
+.post-image {
+  max-width: 400px;
+  max-height: 300px;
+  width: auto;
+  height: auto;
+    border-radius: 8px;
+    transition: box-shadow 0.3s ease-in-out; /* 添加过渡效果 */
+    object-fit: cover; /* 确保图片按照比例裁剪，填满容器 */
+    /* 如果你希望图片完整显示且不裁剪，可以使用以下设置 */
+    object-fit: contain; /* 确保图片按照比例缩放，保持完整 */
+}
+
+
+.post-image:hover {
+    cursor: zoom-in;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3); /* 悬浮时的阴影效果 */
+}
+
+.post-bottom {
+    display: flex;
+    width: 100%;
+}
+
+.post-user {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    cursor: pointer
+}
+
+.post-text {
+    max-width: 300px;
+    width: auto;
+    font-size: 18px !important;
+    text-align: left !important;
+    margin-left: 8px !important;
+    white-space: nowrap !important; /* 不换行 */
+    overflow: hidden !important; /* 隐藏溢出部分 */
+    text-overflow: ellipsis !important; /* 显示省略号 */
+}
+
