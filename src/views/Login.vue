@@ -68,6 +68,8 @@ import {ElMessage} from "element-plus";
 import {useRouter} from "vue-router";
 import Logo from "@/components/Logo.vue";
 
+import '/src/assets/css/background.css'
+
 let form = reactive({
   username: '',
   password: '',
@@ -186,16 +188,6 @@ function signup() {
 </script>
 
 <style scoped>
-.container {
-  z-index: 1;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -80%);
-  width: 400px;
-  height: 500px;
-}
-
 .box {
   position: absolute;
   top: 0px;
@@ -215,121 +207,5 @@ function signup() {
 
 .signup {
   transform: rotateY(-180deg);
-}
-
-.is-background {
-  /* 100%窗口高度 */
-  height: 100vh;
-  /* 弹性布局 居中 */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  /* 渐变背景 */
-  background: linear-gradient(160deg, #dceafe, #91cdf1);
-  /* 溢出隐藏 */
-  overflow: hidden;
-}
-
-ul li {
-  position: absolute;
-  border: 1px solid #fff;
-  background-color: #fff;
-  width: 30px;
-  height: 30px;
-  list-style: none;
-  opacity: 0;
-}
-
-.square li {
-  top: 60vh;
-  left: 60vw;
-  /* 执行动画：动画名 时长 线性的 无限次播放 */
-  animation: square 10s linear infinite;
-}
-
-.square li:nth-child(2) {
-  top: 80vh;
-  left: 10vw;
-  /* 设置动画延迟时间 */
-  animation-delay: 2s;
-}
-
-.square li:nth-child(3) {
-  top: 80vh;
-  left: 85vw;
-  /* 设置动画延迟时间 */
-  animation-delay: 4s;
-}
-
-.square li:nth-child(4) {
-  top: 5vh;
-  left: 70vw;
-  /* 设置动画延迟时间 */
-  animation-delay: 6s;
-}
-
-.square li:nth-child(5) {
-  top: 10vh;
-  left: 10vw;
-  /* 设置动画延迟时间 */
-  animation-delay: 8s;
-}
-
-.circle li {
-  bottom: 0;
-  left: 20vw;
-  /* 执行动画 */
-  animation: circle 10s linear infinite;
-}
-
-.circle li:nth-child(2) {
-  left: 35vw;
-  /* 设置动画延迟时间 */
-  animation-delay: 2s;
-}
-
-.circle li:nth-child(3) {
-  left: 55vw;
-  /* 设置动画延迟时间 */
-  animation-delay: 6s;
-}
-
-.circle li:nth-child(4) {
-  left: 75vw;
-  /* 设置动画延迟时间 */
-  animation-delay: 4s;
-}
-
-.circle li:nth-child(5) {
-  left: 90vw;
-  /* 设置动画延迟时间 */
-  animation-delay: 8s;
-}
-
-/* 定义动画 */
-@keyframes square {
-  0% {
-    transform: scale(0) rotateY(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(5) rotateY(1000deg);
-    opacity: 0;
-  }
-}
-
-@keyframes circle {
-  0% {
-    transform: scale(0) rotateY(0deg);
-    opacity: 1;
-    bottom: 0;
-    border-radius: 0;
-  }
-  100% {
-    transform: scale(5) rotateY(1000deg);
-    opacity: 0;
-    bottom: 90vh;
-    border-radius: 50%;
-  }
 }
 </style>

@@ -4,7 +4,7 @@
     <nav class="nav">
       <ul class="nav-list">
         <li class="nav-item">
-          <el-text class="nav-link" @click="$router.push('/map')">首页</el-text>
+          <el-text class="nav-link" @click="$router.push('/map')" style="cursor: pointer">首页</el-text>
         </li>
       </ul>
     </nav>

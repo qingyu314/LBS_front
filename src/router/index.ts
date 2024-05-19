@@ -72,5 +72,14 @@ router.beforeEach((to, from, next) => {
     } else {
         next()
     }
+
+    // 加了一个禁用/启用网页滚动的功能
+    if (to.path === '/map') {
+        document.body.style.overflow = 'hidden';
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0; // 针对不同浏览器的兼容性
+    } else {
+        document.body.style.overflow = 'auto'
+    }
 })
 export default router

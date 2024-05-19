@@ -36,7 +36,7 @@
       <template v-else>
         <el-text class="post-comment">{{ item.comment }}</el-text>
       </template>
-        <el-button text type="info" v-if="!inEdit[index+1]" @click="editComment(item.comment, index)" :icon="Edit" size="large"/>
+        <el-button text type="info" v-if="isSameUser(item.userId) && !inEdit[index+1]" @click="editComment(item.comment, index)" :icon="Edit" size="large"/>
         <div style="flex: 1"></div>
         <el-button text type="danger" v-if="!inEdit[index+1]" @click="confirmDeleteComment(item.cmtId)" :icon="Delete" size="large"/>
       </div>
@@ -176,6 +176,9 @@ onMounted(() => {
 })
 // id相同可修改-----------------------------------------------------------------------------------------------
 const inEdit = ref<boolean[]>([]);
+const isSameUser = (userId: number) => {
+  return parseInt(sessionStorage.getItem("id") as string, 10) === userId;
+};
 
 const storeComment = ref<string[]>([])
 const editComment = (comment: string, index: number) => {

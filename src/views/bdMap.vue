@@ -5,14 +5,14 @@
         style="min-height: calc(100vh - 50px);"
     >
       <div style="margin: 10px auto auto 10px">
-        <el-button :icon="Fold" plain type="info" @click="changeMode"></el-button>
+        <el-button :icon="Fold" plain type="primary" @click="changeMode"></el-button>
       </div>
       <el-menu-item index="1">
         <el-icon>
           <Location/>
         </el-icon>
         <template #title>
-          <el-button plain type="info" @click="getLoc">自身位置</el-button>
+          <el-button plain type="primary" @click="getLoc">自身位置</el-button>
         </template>
       </el-menu-item>
 
@@ -21,7 +21,7 @@
           <Notification/>
         </el-icon>
         <template #title>
-          <el-button plain type="info" @click="add">添加贴图</el-button>
+          <el-button plain type="primary" @click="add">添加贴图</el-button>
         </template>
       </el-menu-item>
 
@@ -32,7 +32,7 @@
         <template #title>
           <el-dropdown>
             <span class="el-dropdown-link">
-              <el-button plain type="info" @click="()=>getImgSec()">查看贴图</el-button>
+              <el-button plain type="primary" @click="()=>getImgSec()">查看贴图</el-button>
               <el-icon class="el-icon--right">
                 <arrow-down/>
               </el-icon>
@@ -40,7 +40,7 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item style="height: 200px">
-                  <el-slider v-model="distance" :max="40000" show-input size="small" vertical/>
+                  <el-slider v-model="distance" :max="40000" show-input vertical/>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -66,54 +66,7 @@
       </el-menu-item>
     </el-menu>
 
-    <div style="flex: 1">
-      <div v-if="useOuterPoint" class="location-container">
-        <div class="location-details">
-          <el-text size="large" type="primary">当前位置</el-text>
-          <el-text>
-            城市 - {{ result?.addressComponents.province }}-{{
-              result?.addressComponents.city
-            }}-{{ result?.addressComponents.district }}-{{ result?.addressComponents.street }}
-            <br/>
-          </el-text>
-        </div>
-        <div class="coordinates">
-          <span>纬度 - {{ result?.point.lat }}</span>
-          <br/>
-          <span>经度 - {{ result?.point.lng }}</span>
-        </div>
-      </div>
-      <div v-else-if="!isLoadingLoc && !isError" class="location-container">
-
-        <div class="location-details">
-          <el-text size="large" type="primary">定位:</el-text>
-          <el-text>
-            城市 - {{ location.address?.province }}-{{ location.address?.city }}-{{
-              location.address?.district
-            }}-{{ location.address?.street }}
-            <br/>
-            <span>定位精度 - {{ location.accuracy }}m</span>
-          </el-text>
-        </div>
-
-        <div class="coordinates">
-          <span>纬度 - {{ location.point?.lat }}</span>
-          <br/>
-          <span>经度 - {{ location.point?.lng }}</span>
-        </div>
-
-      </div>
-      <div v-else-if="isError" class="location-container">
-        <el-text size="large" type="danger">
-          出错了，{{ status }}
-        </el-text>
-      </div>
-      <div v-else class="location-container">
-        <el-text type="info">
-          定位中...
-        </el-text>
-      </div>
-
+    <div style="flex: 1;position: relative">
       <BMap
           ref="map"
           :center="centerPoint || undefined"
@@ -130,7 +83,7 @@
           :minZoom="3"
           :tilt="45"
           :zoom="19"
-          height="700px"
+          height="100vh"
           v-bind="$attrs"
 
           @click="clickMap"
@@ -170,6 +123,7 @@
           />
           <BInfoWindow
               v-model:show="showDot"
+              :height="auto"
               :offset="{
                 x: 0,
                 y: -10
@@ -184,20 +138,61 @@
                         @click="enterComments(showItem.imageId, showItem.cmtId, showItem.userId, showItem.imgUrl)"/>
               <div class="post-text">{{ showItem.comment }}</div>
               <div class="post-bottom">
-                <UserAvatar :username="showItem.username" :userId="showItem.userId" :size="35" />
+                <UserAvatar :username="showItem.username" :userId="showItem.userId" :size="35"/>
                 <div style="flex: 1"></div>
                 <el-button text v-if="isAdmin()" @click="()=>deleteWhole(showItem.imageId)" :icon="Delete"/>
               </div>
             </div>
           </BInfoWindow>
         </template>
-        <BControl :offset="{ x: 0, y: 0 }" anchor="BMAP_ANCHOR_TOP_RIGHT"
-                  style=" padding: 10px"
-        >
-          <span class="container">经度： {{ result?.point.lng }}</span>
-          <span class="container">纬度： {{ result?.point.lat }}</span>
-        </BControl>
       </BMap>
+
+      <div v-if="useOuterPoint" class="location-container">
+        <div class="location-header">
+          <el-icon>
+            <Location/>
+          </el-icon>
+          <span class="location-header">当前位置</span></div>
+        <span>
+            {{ result?.addressComponents.province }}-{{
+            result?.addressComponents.city
+          }}-{{ result?.addressComponents.district }}-{{ result?.addressComponents.street }}
+          </span>
+        <span>纬度：{{ result?.point.lat }}</span>
+        <span>经度：{{ result?.point.lng }}</span>
+      </div>
+      <div v-else-if="!isLoadingLoc && !isError" class="location-container">
+        <div class="location-header">
+          <el-icon>
+            <Location/>
+          </el-icon>
+          <span class="location-header">定位</span>
+        </div>
+        <span>{{ location.address?.province }}-{{ location.address?.city }}-{{
+            location.address?.district
+          }}-{{ location.address?.street }}</span>
+        <span>定位精度：{{ location.accuracy }}m</span>
+        <span>纬度：{{ location.point?.lat }}</span>
+        <span>经度：{{ location.point?.lng }}</span>
+      </div>
+      <div v-else-if="isError" class="location-container">
+        <div class="location-header">
+          <el-icon>
+            <Location/>
+          </el-icon>
+          <span class="location-header">出错了</span>
+        </div>
+        <span>{{status}}</span>
+      </div>
+      <div v-else class="location-container">
+        <div class="location-header">
+          <el-icon>
+            <Location/>
+          </el-icon>
+          <span class="location-header">定位中</span>
+        </div>
+      </div>
+
       <el-dialog
           v-model="dialogVisible"
           title="上传贴图"
@@ -258,7 +253,7 @@ import {
   Setting,
   Guide,
   ArrowDown,
-  UserFilled, Delete
+  Delete
 } from "@element-plus/icons-vue";
 import {computed, onMounted, ref, type UnwrapRef, watch} from "vue";
 import {
@@ -415,7 +410,7 @@ function handleSuccess(response: any) {
   console.log(cmtUpload.value)
   request.post('/secure/file/comment/add', {
     userid: parseInt(sessionStorage.getItem("id") as string, 10),
-    contain: cmtUpload.value,
+    contain: cmtUpload.value || '无评论',
     imageid: response.data,
   })
 }
@@ -624,22 +619,5 @@ onMounted(() => {
 });
 </script>
 <style scoped>
-.location-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.location-details, .coordinates {
-  margin-top: 20px;
-}
-
-.container {
-  background-color: rgba(0, 0, 0, 0.5); /* 半透明的黑色背景 */
-  display: block; /* 让容器宽度自动调整 */
-  padding: 10px; /* 可根据需要调整 */
-  border-radius: 5px; /* 可根据需要调整，增加一些圆角 */
-  color: white; /* 文字颜色为白色 */
-}
 
 </style>
