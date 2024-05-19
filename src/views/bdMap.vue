@@ -318,20 +318,18 @@ const changeMode = () => {
 }
 
 // 浏览器定位----------------------------------------------------------------------------------------------------------------
-interface pointClass {
-  lat: number,
-  lng: number
-}
-
 const locOption: UseBrowserLocationOptions = {
   enableHighAccuracy: true, // 设置为true以启用高精度定位
   enableSDKLocation: true
 };
-let point = ref<pointClass>({lng: 116.30793520652882, lat: 40.05861561613348})
-let centerPoint = ref<pointClass | null>(null)
+let point = ref<Point>({lng: 116.30793520652882, lat: 40.05861561613348})
+let centerPoint = ref<Point | null>(null)
 const {get: getLoc, location, isLoading: isLoadingLoc, isError, status} = useBrowserLocation(locOption, () => {
   useOuterPoint.value = false
   centerPoint.value = location.value.point
+  point.value = location.value.point
+  dataForm.value.latitude = point.value.lat
+  dataForm.value.longitude = point.value.lng
   map.value.resetCenter()
 })
 
@@ -419,6 +417,7 @@ const uploadRef = ref<UploadInstance>()
 const submitUpload = () => {
   console.log(fileList.value)
   uploadRef.value!.submit()
+  dialogVisible.value = false
 }
 
 // 一个范围内的贴图查询-----------------------------------------------------------------------------------------------------------------
