@@ -214,7 +214,7 @@
             action="http://localhost:9091/secure/file/upload"
             drag="true"
             list-type="picture-card"
-            multiple
+            :limit="1"
         >
           <el-icon>
             <Plus/>
@@ -279,7 +279,7 @@ import '/src/assets/css/bdMapPage.css'
 import DrawerAdmin from "@/components/DrawerAdmin.vue";
 // 初始化-------------------------------------------------------------------------
 let authHeaders = {
-  Authorization: sessionStorage.getItem("token")
+  Authorization: localStorage.getItem("token")
 }
 const map = ref()
 
@@ -352,7 +352,7 @@ function handleInitd() {
 
 // 标点----------------------------------------------------------------------------------------------------------------
 const dataForm = ref({
-  id: parseInt(sessionStorage.getItem("id") as string, 10),
+  id: parseInt(localStorage.getItem("id") as string, 10),
   latitude: point.value.lat,
   longitude: point.value.lng,
 })
@@ -409,7 +409,7 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
 function handleSuccess(response: any) {
   console.log(cmtUpload.value)
   request.post('/secure/file/comment/add', {
-    userid: parseInt(sessionStorage.getItem("id") as string, 10),
+    userid: parseInt(localStorage.getItem("id") as string, 10),
     contain: cmtUpload.value || '无评论',
     imageid: response.data,
   })
@@ -572,7 +572,7 @@ const handleSyncBackendChanges = (param1, param2) => {
 };
 // 管理员在infoWindow删帖----------------------------------------------------------------------------------------------
 const isAdmin = () => {
-  return parseInt(sessionStorage.getItem("id") as string, 10) == 1
+  return parseInt(localStorage.getItem("id") as string, 10) == 1
 }
 const deleteWhole = (imageId: number) => {
   request.delete(`/secure/file/image/delete`, {

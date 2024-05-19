@@ -2,7 +2,6 @@ import {createRouter, createWebHistory} from 'vue-router'
 import Login from "@/views/Login.vue";
 import Info from "@/views/Info.vue";
 import bdMap from "@/views/bdMap.vue";
-import MapPoint from "@/views/MapPoint.vue";
 import Header from "@/components/Header.vue";
 import UserDetail from "@/views/UserDetail.vue";
 import POIMap from "@/views/POIMap.vue";
@@ -28,14 +27,6 @@ const router = createRouter({
                     path: 'poi',
                     name: 'poi',
                     component: POIMap,
-                    meta: {
-                        requireAuth: true
-                    }
-                },
-                {
-                    path: 'mapPoint',
-                    name: 'mapPoint',
-                    component: MapPoint,
                     meta: {
                         requireAuth: true
                     }
@@ -79,10 +70,13 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+    if (to.path === '/login' && localStorage.getItem('token')) {
+        next('/map')
+    }
     // 判断该路由是否需要登录权限
     if (to.meta.requireAuth) {
         // 该路由需要登录权限
-        if (sessionStorage.getItem('token')) {
+        if (localStorage.getItem('token')) {
             // 已登录
             next()
         } else {

@@ -48,7 +48,7 @@ const usernameFontSize = computed(() => `${props.size / 1.5}px`);
 
 // 跳转到用户详情页
 const jumpUser = (userId: number) => {
-  if (userId == parseInt(sessionStorage.getItem("id") as string, 10)) {
+  if (userId == parseInt(localStorage.getItem("id") as string, 10)) {
     router.push('/info')
   } else {
     router.push('/userDetail/' + String(userId))

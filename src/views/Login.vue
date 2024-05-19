@@ -137,15 +137,15 @@ function login() {
             type: "success",
             message: "登录成功"
           })
-          sessionStorage.setItem("token", res.data.data)
+          localStorage.setItem("token", res.data.data)
           const base64Url = res.data.data.split('.')[1]; // 获取 JWT 的第二部分，即 payload
           const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
           const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
           }).join(''));
-          sessionStorage.setItem("id", JSON.parse(jsonPayload).id)
-          sessionStorage.setItem("username", JSON.parse(jsonPayload).userName)
-          sessionStorage.setItem("password", form.password)
+          localStorage.setItem("id", JSON.parse(jsonPayload).id)
+          localStorage.setItem("username", JSON.parse(jsonPayload).userName)
+          localStorage.setItem("password", form.password)
           router.push({path: '/map'})
         } else {
           ElMessage({

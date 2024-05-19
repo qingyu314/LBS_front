@@ -47,18 +47,18 @@ import Logo from '@/components/Logo.vue';
 
 // 创建一个响应式对象来存储全局状态
 const userState = reactive({
-  username: sessionStorage.getItem("username") || '未登录',
+  username: localStorage.getItem("username") || '未登录',
 });
 
 // 使用 provide 提供全局状态
 provide('userState', userState);
 
 function logout() {
-  // 清除 sessionStorage 中的用户相关数据
-  sessionStorage.removeItem('id');
-  sessionStorage.removeItem('username');
-  sessionStorage.removeItem('password');
-  sessionStorage.removeItem('introduction');
+  // 清除 localStorage 中的用户相关数据
+  localStorage.removeItem('id');
+  localStorage.removeItem('username');
+  localStorage.removeItem('password');
+  localStorage.removeItem('introduction');
 
   // 成功注销后重定向到登录页面
   window.location.href = '/login';

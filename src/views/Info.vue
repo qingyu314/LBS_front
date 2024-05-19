@@ -66,8 +66,8 @@ let editing = ref(false);
 let selectedImageId = ref(null);
 let images = ref([]);
 let form = reactive({
-  id: sessionStorage.getItem("id"),
-  username: sessionStorage.getItem("username"),
+  id: localStorage.getItem("id"),
+  username: localStorage.getItem("username"),
   oldPassword: '',
   password: '',
   confirmPassword: '',
@@ -77,11 +77,11 @@ let form = reactive({
 const userState = inject('userState');
 
 onMounted(() => {
-  const userId = sessionStorage.getItem("id");
+  const userId = localStorage.getItem("id");
   request.get(`/secure/user/${userId}`).then(res => {
     if (res.data) {
       form.introduction = res.data.introduction;
-      sessionStorage.setItem("introduction", form.introduction);
+      localStorage.setItem("introduction", form.introduction);
     } else {
       ElMessage({
         type: "error",
@@ -162,7 +162,7 @@ function deleteImage() {
   request.delete(`/secure/file/image/delete`, {
     params: {
       imageId: selectedImageId.value,
-      userId: sessionStorage.getItem("id")
+      userId: localStorage.getItem("id")
     }
   }).then(res => {
     if (res.data.code === '0') {
@@ -191,11 +191,11 @@ function edit() {
 
 function cancel() {
   editing.value = false;
-  form.username = sessionStorage.getItem("username");
+  form.username = localStorage.getItem("username");
   form.oldPassword = '';
   form.password = '';
   form.confirmPassword = '';
-  form.introduction = sessionStorage.getItem("introduction");
+  form.introduction = localStorage.getItem("introduction");
 }
 
 function update() {
@@ -207,7 +207,7 @@ function update() {
     return;
   }
 
-  const storedPassword = sessionStorage.getItem("password");
+  const storedPassword = localStorage.getItem("password");
 
   if (form.oldPassword && form.oldPassword !== storedPassword) {
     ElMessage({
@@ -250,9 +250,9 @@ function update() {
         message: "更新成功"
       });
       userState.username = form.username;
-      sessionStorage.setItem("username", form.username);
+      localStorage.setItem("username", form.username);
       if (form.password) {
-        sessionStorage.setItem("password", form.password);
+        localStorage.setItem("password", form.password);
       }
       editing.value = false;
       form.oldPassword = '';

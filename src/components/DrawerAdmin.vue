@@ -151,7 +151,7 @@ const newComment = ref('');
 const submitComment = () => {
   // 向后端发送评论内容
   request.post('/secure/file/comment/add', {
-    userid: parseInt(sessionStorage.getItem("id") as string, 10),
+    userid: parseInt(localStorage.getItem("id") as string, 10),
     imageid: info?.imageId,
     contain: newComment.value
   }).then(() => {
@@ -177,7 +177,7 @@ onMounted(() => {
 // id相同可修改-----------------------------------------------------------------------------------------------
 const inEdit = ref<boolean[]>([]);
 const isSameUser = (userId: number) => {
-  return parseInt(sessionStorage.getItem("id") as string, 10) === userId;
+  return parseInt(localStorage.getItem("id") as string, 10) === userId;
 };
 
 const storeComment = ref<string[]>([])
@@ -239,7 +239,7 @@ const saveComment = (commentId: number, newComment: string, index: number) => {
   request.put(`/secure/file/comment/update`, null, {
     params: {
       commentId: commentId,
-      userId: parseInt(sessionStorage.getItem("id") as string, 10),
+      userId: parseInt(localStorage.getItem("id") as string, 10),
       newContain: newComment
     }
   }).then(() => {
