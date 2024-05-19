@@ -133,7 +133,7 @@
               enableCloseOnClick
               class="post-window"
           >
-            <div v-if="!loadImgDot" class="post-container">
+            <div class="post-container">
               <el-image :src="showItem.imgUrl" class="post-image"
                         @click="enterComments(showItem.imageId, showItem.cmtId, showItem.userId, showItem.imgUrl)"/>
               <div class="post-text">{{ showItem.comment }}</div>
@@ -442,8 +442,7 @@ const position = ref({
 const showDot = ref<boolean>(false)// 在下面用到的
 const loadImgDot = ref<boolean>(true)
 const getImgSec = async (option: boolean = false, imageId: number = 0) => {
-  showDot.value = false;
-  loadImgDot.value = true
+  // loadImgDot.value = true
   cardList.value = []
   try {
     const res = await request.get('secure/file/locate', {
@@ -510,8 +509,9 @@ const getImgSec = async (option: boolean = false, imageId: number = 0) => {
         imageId: 0,
         position: {lat: 0, lng: 0},
       }
-      showDot.value = false;
-      // debugger
+      position.value = showItem.value.position;
+      debugger
+      showDot.value = false
     } else {
       if (!option) {
         position.value = cardList.value[0].position;
@@ -521,7 +521,7 @@ const getImgSec = async (option: boolean = false, imageId: number = 0) => {
         position.value = cardList.value[imgIdx].position;
         showItem.value = JSON.parse(JSON.stringify(cardList.value[imgIdx]));
       }
-      showDot.value = true;
+      showDot.value = true
     }
     loadImgDot.value = false;
   }

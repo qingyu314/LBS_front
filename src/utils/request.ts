@@ -14,7 +14,7 @@ request.interceptors.request.use(config => {
     config.headers['Content-Type'] = 'application/json;charset=utf-8';
 
     // 从localStorage中获取token
-    const token = sessionStorage.getItem('token');
+    const token = localStorage.getItem('token');
     // 如果token存在，则添加到请求头中
     if (token) {
         config.headers['Authorization'] = `${token}`;

@@ -59,6 +59,7 @@ function logout() {
   localStorage.removeItem('username');
   localStorage.removeItem('password');
   localStorage.removeItem('introduction');
+  localStorage.removeItem('token');
 
   // 成功注销后重定向到登录页面
   window.location.href = '/login';
