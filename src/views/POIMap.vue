@@ -39,7 +39,7 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item style="height: 200px">
-                  <el-slider v-model="distance" :max="4000000" show-input size="small" vertical/>
+                  <el-slider v-model="distance" :max="10000000" show-input size="small" vertical/>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -109,19 +109,20 @@
 import {onMounted, ref, watch} from 'vue'
 import {
   BControl,
-  BInfoWindow,
   BMap,
   BMarker,
-  CoordinatesFromType, CoordinatesToType,
+  CoordinatesFromType,
+  CoordinatesToType,
   type MapType,
-  type Point, type PointGeocoderResult,
-  usePointConvertor, usePointGeocoder,
+  type Point,
+  type PointGeocoderResult,
+  usePointConvertor,
+  usePointGeocoder,
 } from 'vue3-baidu-map-gl'
 import request from "@/utils/request";
 import {ArrowDown, ChatDotSquare, Fold, Guide, Setting} from "@element-plus/icons-vue";
 import MapOption from "@/components/MapOption.vue";
-// 给每个点进行坐标转换--------------------------------------------------------------------------------------------------
-// const { result, convert, isLoading, isError, status } = usePointConvertor()
+
 const type = ref<MapType>('BMAP_NORMAL_MAP')
 interface allSettings {
   enableDragging: boolean,
@@ -177,16 +178,24 @@ const getPOI = () => {
     POIData.value = res.data
     console.log(POIData.value)
   }).then(()=>{
+    positions.value = []
     for(let i=0;i<POIData.value.length;i++){
       const tmpPoi = {lng: POIData.value[i].longitude, lat: POIData.value[i].latitude};
       positions.value.push(tmpPoi);
     }
+    convertedPositions.value = positions.value
   }).then(()=>{
     // 开始单个转换
-    convertedPositions.value = positions.value
+    //convertedPosition.value = []
     // processNext();
+    // convert([convertedPositions.value[0]],CoordinatesFromType.COORDINATES_GCJ02, CoordinatesToType.COORDINATES_BD09)
   })
 }
+// watch(resConv,(newVal, oldVal) => {
+//   if(newVal){
+//     getGeo(newVal[0])
+//   }
+// })
 // 坐标转换-------------------------------------------------------------------------------------------------
 // let currentIndex = 0;
 // // 处理下一个坐标转换
@@ -228,20 +237,31 @@ function handleClick(e) {
   getGeo(e.latlng)
 }
 // 查找-----------------------------------------------------------------------------------------------------------
-const distance = ref(10000)
+const distance = ref(100) //公里
 const getDotsByRad=()=>{
-  request.get('secure/user/getLocation', {
-    params:{
-      latitude: point.value.lat,
-      longitude: point.value.lng,
-      radius: distance.value
-    }
-  }).then((res) => {
-    console.log(point.value)
-    console.log(res.data)
-  })
+  convertedPositions.value = positions.value.filter(pos => calculateDistance(point.value, pos) <= distance.value);
 }
 
+function calculateDistance(coord1: Point, coord2: Point): number {
+  const R = 6371; // 地球半径（单位：公里）
+  const toRadians = (degree: number) => degree * (Math.PI / 180);
+
+  const dLat = toRadians(coord2.lat - coord1.lat);
+  const dLon = toRadians(coord2.lng - coord1.lng);
+
+  const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRadians(coord1.lat)) * Math.cos(toRadians(coord2.lat)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  const distance = R * c;
+  return distance;
+}
+
+function findPointsWithinRadius() {
+  convertedPositions.value = convertedPositions.value.filter(pos => calculateDistance(point, pos) <= distance);
+}
 onMounted(()=>{
   getPOI()
 })

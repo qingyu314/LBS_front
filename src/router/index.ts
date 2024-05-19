@@ -19,27 +19,42 @@ const router = createRouter({
                 {
                     path: 'map',
                     name: 'map',
-                    component: bdMap
+                    component: bdMap,
+                    meta: {
+                        requireAuth: true
+                    }
                 },
                 {
                     path: 'poi',
                     name: 'poi',
-                    component: POIMap
+                    component: POIMap,
+                    meta: {
+                        requireAuth: true
+                    }
                 },
                 {
                     path: 'mapPoint',
                     name: 'mapPoint',
-                    component: MapPoint
+                    component: MapPoint,
+                    meta: {
+                        requireAuth: true
+                    }
                 },
                 {
-                    path: "/info",
+                    path: "info",
                     name: "info",
-                    component: Info
+                    component: Info,
+                    meta: {
+                        requireAuth: true
+                    }
                 },
                 {
-                    path: "/userDetail/:id",  // userDetail/id
+                    path: "userDetail/:id",  // userDetail/id
                     name: "userDetail",
-                    component: UserDetail
+                    component: UserDetail,
+                    meta: {
+                        requireAuth: true
+                    }
                 },
             ]
         },
@@ -52,14 +67,18 @@ const router = createRouter({
             }
         },
         {
-            path: '/:pathMatch(.*)*', // 捕获所有未定义的路径
-            name: '404', component: () => import('@/views/404.vue'), meta: {requireAuth: false}
+            path:'/:pathMatch(.*)*',
+            name:'404',
+            component: ()=>import('@/views/404.vue'),
+            meta: {
+                requireAuth: false
+            }
+
         }
     ]
 })
 
 router.beforeEach((to, from, next) => {
-    const type = to.meta.type
     // 判断该路由是否需要登录权限
     if (to.meta.requireAuth) {
         // 该路由需要登录权限
@@ -71,15 +90,6 @@ router.beforeEach((to, from, next) => {
         }
     } else {
         next()
-    }
-
-    // 加了一个禁用/启用网页滚动的功能
-    if (to.path === '/map') {
-        document.body.style.overflow = 'hidden';
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0; // 针对不同浏览器的兼容性
-    } else {
-        document.body.style.overflow = 'auto'
     }
 })
 export default router

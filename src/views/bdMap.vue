@@ -211,7 +211,7 @@
             :on-preview="handlePictureCardPreview"
             :on-remove="handleRemove"
             :on-success="handleSuccess"
-            action="http://192.168.137.186:9091/secure/file/upload"
+            action="http://localhost:9091/secure/file/upload"
             drag="true"
             list-type="picture-card"
             multiple
