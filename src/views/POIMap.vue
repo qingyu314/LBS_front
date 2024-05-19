@@ -39,7 +39,7 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item style="height: 200px">
-                  <el-slider v-model="distance" :max="10000000" show-input size="small" vertical/>
+                  <el-slider v-model="distance" :max="4000" show-input size="small" vertical/>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -65,8 +65,8 @@
         :mapType="type"
         :minZoom="3"
         :tilt="0"
-        :zoom="10"
-        height="600px"
+        :zoom="5"
+        height="95vh"
         v-bind="$attrs"
 
         @click="handleClick"
@@ -84,10 +84,14 @@
       <template v-if="!loadPoint">
         <template v-for="(item, index) in convertedPositions">
           <BMarker
-              :position="item"
+              :position="item.position"
               :visible="visible"
           >
           </BMarker>
+          <BLabel
+              style="color: #333; font-size: 9px"
+              :position="item.position"
+              :content="`${POIData[item.index].name}`"/>
         </template>
         <BControl>
           <el-button
@@ -108,7 +112,7 @@
 <script lang="ts" setup>
 import {onMounted, ref, watch} from 'vue'
 import {
-  BControl,
+  BControl, BLabel,
   BMap,
   BMarker,
   CoordinatesFromType,
@@ -152,8 +156,8 @@ let mapSetting = ref<allSettings>({
   type: 'BMAP_NORMAL_MAP'
 })
 
-//坐标转换
-const {result: resConv, convert, isLoading: isLoadConv, isError: isErrConv, status: stConv} = usePointConvertor()
+const { result: resConv, convert, isLoading: isLoadConv, isError: isErrConv, status: stConv } = usePointConvertor();
+
 interface poiItem {
   code: string;
   department: string;
@@ -167,37 +171,37 @@ interface poiItem {
   size: number;
   type: string;
 }
-const POIData = ref<poiItem[]>([])
-const loadPoint = ref<boolean>(false)
-const positions = ref<Point[]>([])
-const convertedPositions = ref<Point[]>([])
+
+const POIData = ref<poiItem[]>([]);
+const loadPoint = ref<boolean>(false);
+const positions = ref<{ position: Point, index: number }[]>([]);
+const convertedPositions = ref<{ position: Point, index: number }[]>([]);
+
 // 获取POI
 const getPOI = () => {
-  POIData.value = []
+  POIData.value = [];
   request.get('secure/user/poi/all').then((res) => {
-    POIData.value = res.data
-    console.log(POIData.value)
-  }).then(()=>{
-    positions.value = []
-    for(let i=0;i<POIData.value.length;i++){
-      const tmpPoi = {lng: POIData.value[i].longitude, lat: POIData.value[i].latitude};
-      positions.value.push(tmpPoi);
+    POIData.value = res.data;
+    console.log(POIData.value);
+  }).then(() => {
+    positions.value = [];
+    for (let i = 0; i < POIData.value.length; i++) {
+      const tmpPoi = { lng: POIData.value[i].longitude, lat: POIData.value[i].latitude };
+      positions.value.push({ position: tmpPoi, index: i });
     }
-    convertedPositions.value = positions.value
-  }).then(()=>{
-    // 开始单个转换
-    //convertedPosition.value = []
-    // processNext();
-    // convert([convertedPositions.value[0]],CoordinatesFromType.COORDINATES_GCJ02, CoordinatesToType.COORDINATES_BD09)
+     convertedPositions.value = positions.value
   })
-}
-// watch(resConv,(newVal, oldVal) => {
-//   if(newVal){
-//     getGeo(newVal[0])
-//   }
-// })
+      // .then(() => {
+    // 开始单个转换
+    // convertedPosition.value = []
+    // processNext();
+    // convert([convertedPositions.value[0]], CoordinatesFromType.COORDINATES_GCJ02, CoordinatesToType.COORDINATES_BD09)
+  // });
+};
+
 // 坐标转换-------------------------------------------------------------------------------------------------
 // let currentIndex = 0;
+//
 // // 处理下一个坐标转换
 // const processNext = () => {
 //   if (currentIndex >= positions.value.length) {
@@ -205,18 +209,19 @@ const getPOI = () => {
 //     return;
 //   }
 //
-//   const currentPoint = [positions.value[currentIndex]];
+//   const currentPoint = [positions.value[currentIndex].position];
 //   convert(currentPoint, CoordinatesFromType['COORDINATES_GCJ02'], CoordinatesToType['COORDINATES_BD09']);
 // };
 //
 // // 监视resConv的变化
 // watch(resConv, (newVal) => {
 //   if (newVal.length > 0) {
-//     convertedPositions.value.push(...newVal);
+//     convertedPositions.value.push({ position: newVal[0], index: currentIndex });
 //     currentIndex++;
 //     processNext();
 //   }
 // });
+
 
 // 改变侧边栏展示模式-------------------------------------------------------------------------------------------
 const isCollapse = ref<boolean>(true)
@@ -239,7 +244,7 @@ function handleClick(e) {
 // 查找-----------------------------------------------------------------------------------------------------------
 const distance = ref(100) //公里
 const getDotsByRad=()=>{
-  convertedPositions.value = positions.value.filter(pos => calculateDistance(point.value, pos) <= distance.value);
+  convertedPositions.value = positions.value.filter(pos => calculateDistance(point.value, pos.position) <= distance.value);
 }
 
 function calculateDistance(coord1: Point, coord2: Point): number {
@@ -259,9 +264,6 @@ function calculateDistance(coord1: Point, coord2: Point): number {
   return distance;
 }
 
-function findPointsWithinRadius() {
-  convertedPositions.value = convertedPositions.value.filter(pos => calculateDistance(point, pos) <= distance);
-}
 onMounted(()=>{
   getPOI()
 })
