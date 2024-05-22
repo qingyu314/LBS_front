@@ -5,6 +5,7 @@ import bdMap from "@/views/bdMap.vue";
 import Header from "@/components/Header.vue";
 import UserDetail from "@/views/UserDetail.vue";
 import POIMap from "@/views/POIMap.vue";
+import Convert from "@/views/Convert.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -47,6 +48,11 @@ const router = createRouter({
                         requireAuth: true
                     }
                 },
+                {
+                    path: "convert",
+                    name: "convert",
+                    component: Convert,
+                }
             ]
         },
         {
@@ -77,21 +83,21 @@ const router = createRouter({
     ]
 })
 
-router.beforeEach((to, from, next) => {
-    if (to.path === '/login' && localStorage.getItem('token')) {
-        next('/map')
-    }
-    // 判断该路由是否需要登录权限
-    if (to.meta.requireAuth) {
-        // 该路由需要登录权限
-        if (localStorage.getItem('token')) {
-            // 已登录
-            next()
-        } else {
-            next('/login')
-        }
-    } else {
-        next()
-    }
-})
+// router.beforeEach((to, from, next) => {
+//     if (to.path === '/login' && localStorage.getItem('token')) {
+//         next('/map')
+//     }
+//     // 判断该路由是否需要登录权限
+//     if (to.meta.requireAuth) {
+//         // 该路由需要登录权限
+//         if (localStorage.getItem('token')) {
+//             // 已登录
+//             next()
+//         } else {
+//             next('/login')
+//         }
+//     } else {
+//         next()
+//     }
+// })
 export default router
