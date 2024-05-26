@@ -65,13 +65,8 @@
         </template>
       </el-menu-item>
     </el-menu>
+
     <div style="flex: 1;position: relative">
-      <el-button-group>
-        <el-button @click="() => getPOI()">获取所有信息</el-button>
-      </el-button-group>
-      <div>
-        <selectPoi :showData="POIData" :point="point" @callbackShow="resPoi"/>
-      </div>
       <BMap
           ref="map"
           :center="centerPoint || undefined"
@@ -149,13 +144,6 @@
               </div>
             </div>
           </BInfoWindow>
-        </template>
-        <template v-for="(item, index) in resPos">
-          <BMarker
-              :position="item"
-              icon="simple_blue"
-          >
-          </BMarker>
         </template>
       </BMap>
 
@@ -289,7 +277,6 @@ import CmtDrawer from "@/components/CmtDrawer.vue";
 
 import '/src/assets/css/bdMapPage.css'
 import DrawerAdmin from "@/components/DrawerAdmin.vue";
-import SelectPoi, {type poiItem} from "@/components/selectPoi.vue";
 // 初始化-------------------------------------------------------------------------
 let authHeaders = {
   Authorization: localStorage.getItem("token")
@@ -454,7 +441,6 @@ const position = ref({
 const showDot = ref<boolean>(false)// 在下面用到的
 const loadImgDot = ref<boolean>(true)
 const getImgSec = async (option: boolean = false, imageId: number = 0) => {
-  // loadImgDot.value = true
   cardList.value = []
   try {
     const res = await request.get('secure/file/locate', {
@@ -607,29 +593,6 @@ const deleteWhole = (imageId: number) => {
     getImgSec()
   })
 }
-// poi功能区------------------------------------------------------------------------------------------------------
-const POIData = ref<poiItem[]>([]);
-const resPoi = ref<poiItem[]>([])
-const resPos = ref<Point[]>([])
-const getPOI = () => {
-  POIData.value = [];
-  request.get('secure/user/poi/all').then((res) => {
-    POIData.value = res.data;
-    resPoi.value = res.data;
-    console.log(POIData.value);
-    resPos.value = POIData.value.map(poi => ({lng: poi.longitude, lat: poi.latitude}))
-  })
-};
-const visiblePoi = ref<boolean>(true)
-const changeVisible = () => {
-  visiblePoi.value = !visible.value
-}
-watch(()=>resPoi,(newVal, oldVal) => {
-    resPos.value = newVal.value.map(poi => ({lng: poi.longitude, lat: poi.latitude}))
-      console.log(resPos)
-},
-{deep: true}
-)
 // 从外部获取坐标进入界面-------------------------------------------------------------------------------------------
 const route = useRoute();
 const useOuterPoint = ref<boolean>(false)

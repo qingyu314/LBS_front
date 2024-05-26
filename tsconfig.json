@@ -7,5 +7,9 @@
     {
       "path": "./tsconfig.app.json"
     }
-  ]
+  ],
+  "compilerOptions": {
+    // ...
+    "types": ["vue3-baidu-map-gl/volar"]
+  }
 }

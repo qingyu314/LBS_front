@@ -1,4 +1,11 @@
 <template>
+  <div style="flex-wrap: wrap">
+    <el-button-group>
+      <el-button @click="() => getPOI()">获取所有信息</el-button>
+      <el-button @click="add">添加POI(记得先标点)</el-button>
+    </el-button-group>
+  </div>
+
   <el-radio-group v-model="mode">
     <el-radio :value="false" size="large">半径搜索</el-radio>
     <el-radio :value="true" size="large">关键字搜索</el-radio>
@@ -8,14 +15,14 @@
       <el-slider v-model="distance" :max="4000" :disabled="mode" show-input/>
     </div>
     <div style="margin-left: 30px">
-      <el-button @click="getPoiByRad">查询</el-button>
+      <el-button @click="()=>getPoiByRad()" :disabled="mode" :icon="Filter">查找</el-button>
     </div>
   </div>
   <div class="demo-date-picker">
     <el-checkbox v-model="enableCode" :disabled="!mode"/>
     <el-select
         v-model="selectCode"
-        :disabled="!enableCode && !mode"
+        :disabled="!enableCode || !mode"
         clearable
         placeholder="选择省份"
         style="width: 240px"
@@ -30,7 +37,7 @@
     <el-checkbox v-model="enableType" :disabled="!mode"/>
     <el-select
         v-model="selectType"
-        :disabled="!enableType && !mode"
+        :disabled="!enableType || !mode"
         clearable
         placeholder="选择类型"
         style="width: 240px"
@@ -45,7 +52,7 @@
     <el-checkbox v-model="enableDepart" :disabled="!mode"/>
     <el-select
         v-model="selectDepart"
-        :disabled="!enableDepart && !mode"
+        :disabled="!enableDepart || !mode"
         clearable
         placeholder="选择所属系"
         style="width: 240px"
@@ -57,31 +64,140 @@
           :value="item.value"
       />
     </el-select>
-
+    <el-checkbox v-model="enableDate" :disabled="!mode"/>
     <el-date-picker
         v-model="chosenDate"
+        :disabled="!enableDate || !mode"
         format="YYYY/MM/DD"
         placeholder="Pick a day"
         size="default"
         type="date"
         value-format="YYYYMMDD"
     />
-    <el-button @click="searchPoi">查找</el-button>
+    <el-button @click="searchPoi" :disabled="!mode" :icon="Filter">查找</el-button>
+
+    <el-dialog
+        v-model="dialogVisible"
+        title="上传贴图"
+        width="50%"
+    >
+      <el-form :model="poiForm">
+        <el-form-item label="code">
+          <el-input v-model="poiForm.code" />
+        </el-form-item>
+        <el-form-item label="name">
+          <el-input v-model="poiForm.name" />
+        </el-form-item>
+        <el-form-item label="locate">
+          <el-input v-model="poiForm.locate" disabled />
+        </el-form-item>
+        <el-form-item label="size">
+          <el-input-number v-model="poiForm.size" :precision="2" :step="0.1" />
+        </el-form-item>
+        <el-form-item label="protectObject">
+          <el-input v-model="poiForm.protectObject" />
+        </el-form-item>
+        <el-form-item label="type">
+          <el-select
+              v-model="poiForm.type"
+              clearable
+              placeholder="选择类型"
+              style="width: 240px"
+          >
+            <el-option
+                v-for="item in typeList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="level">
+          <el-input v-model="poiForm.level" disabled />
+        </el-form-item>
+        <el-form-item label="setTime">
+          <el-date-picker
+              v-model="poiForm.setTime"
+              format="YYYY/MM/DD"
+              placeholder="Pick a day"
+              size="default"
+              type="date"
+              value-format="YYYYMMDD"
+          />
+        </el-form-item>
+        <el-form-item label="department">
+          <el-select
+              v-model="poiForm.department"
+              clearable
+              placeholder="选择所属系"
+              style="width: 240px"
+          >
+            <el-option
+                v-for="item in departList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="coordinate(lng, lat)">
+          <el-col :span="11">
+            <el-input v-model="poiForm.longitude" disabled />
+          </el-col>
+          <el-col :span="2">
+            <span>, </span>
+          </el-col>
+          <el-col :span="11">
+            <el-input v-model="poiForm.latitude" disabled />
+          </el-col>
+        </el-form-item>
+      </el-form>
+      <el-upload
+          ref="uploadRef"
+          v-model:file-list="fileList"
+          :auto-upload="false"
+          :before-upload="beforeUpload"
+          :data="dataForm"
+          :headers="authHeaders"
+          :on-preview="handlePictureCardPreview"
+          :on-remove="handleRemove"
+          :on-success="handleSuccess"
+          action="http://localhost:9091/secure/file/upload"
+          drag="true"
+          list-type="picture-card"
+          :limit="1"
+      >
+        <el-icon>
+          <Plus/>
+        </el-icon>
+      </el-upload>
+
+      <el-dialog v-model="previewVisible">
+        <img :src="dialogImageUrl" alt="Preview Image" w-full/>
+      </el-dialog>
+      <template #footer>
+        <el-button style="width: 150px; height: 50px" type="primary" @click="submitUpload">上传</el-button>
+      </template>
+
+    </el-dialog>
   </div>
 </template>
 
 <script lang="ts" setup>
 import {onMounted, ref, watch} from "vue";
 import request from "@/utils/request";
-import * as sea from "node:sea";
 import type {Point} from "vue3-baidu-map-gl";
+import {ElMessage, type UploadInstance, type UploadProps, type UploadUserFile} from "element-plus";
+import {Plus, Filter} from "@element-plus/icons-vue"
 
 const enableCode = ref(false)
 const enableType = ref(false)
 const enableDepart = ref(false)
+const enableDate = ref(false)
 const selectCode = ref<string>('')
 const selectType = ref<string>('')
 const selectDepart = ref<string>('')
+const chosenDate = ref<string>('')
 
 export interface poiItem {
   code: string;
@@ -95,6 +211,7 @@ export interface poiItem {
   setTime: string; // 你可以根据需要将时间类型更改为 Date 类型
   size: number;
   type: string;
+  imageid: number;
 }
 
 interface Option {
@@ -103,23 +220,45 @@ interface Option {
 }
 
 const props = defineProps<{
-  showData: poiItem[],
-  point: Point
+  point: Point,
+  result: string
 }>()
 const emit = defineEmits(['callbackShow'])
+const poiData =  ref<poiItem[]>([])
 const resPoi = ref<poiItem[]>([])
+const isSearch = ref(false)
+let authHeaders = {
+  Authorization: localStorage.getItem("token")
+}
+// 获取所有POI信息----------------------------------------------------------------------------------------------------
+const getPOI = () => {
+  poiData.value = [];
+  request.get('secure/user/poi/all').then((res) => {
+    poiData.value = res.data;
+    console.log(poiData.value);
+
+    typeList.value = getAllTypes(poiData.value)
+    departList.value = getAllDepartments(poiData.value)
+
+    emit('callbackShow', poiData.value);
+    isSearch.value = false
+  })
+};
 // 选择模式-----------------------------------------------------------------------------------------------------------
-const mode = ref<boolean>(true)
+const mode = ref<boolean>(false)
 // 根据半径查询-------------------------------------------------------------------------------------------------------
 const distance = ref<number>(100)
 const getPoiByRad = () => {
-  resPoi.value = props.showData.filter(poi => calculateDistance(props.point, {
+  resPoi.value = poiData.value.filter(poi => calculateDistance(props.point, {
     lat: poi.latitude,
     lng: poi.longitude
   }) <= distance.value);
-  emit('callbackShow', resPoi)
-}
+  console.log(resPoi.value)
 
+  emit('callbackShow', resPoi.value)
+  isSearch.value = true
+}
+// 根据经纬度计算距离
 function calculateDistance(coord1: Point, coord2: Point): number {
   const R = 6371; // 地球半径（单位：公里）
   const toRadians = (degree: number) => degree * (Math.PI / 180);
@@ -175,7 +314,7 @@ const provinces = [
 
 const typeList = ref<Option[]>([])
 const departList = ref<Option[]>([])
-const chosenDate = ref<string>('')
+
 
 // 函数用于获取所有可能的 type 值，并以指定的格式返回
 function getAllTypes(poiList: poiItem[]): { value: string, label: string }[] {
@@ -209,25 +348,112 @@ const searchPoi = () => {
     }
   }).then(res => {
     resPoi.value = res.data;
-    emit('callbackShow', resPoi)
+    console.log(resPoi.value)
+    emit('callbackShow', resPoi.value)
+    isSearch.value = true
   })
 }
 
-watch(() => props.showData, (newVal, oldVal) => {
-      console.log(111)
-      typeList.value = getAllTypes(newVal)
-      departList.value = getAllDepartments(newVal)
-    },
-    {deep: true}
-)
-
-watch(() => resPoi, (newVal, oldVal) => {
-  console.log(newVal)
-  emit('callbackShow', newVal)
+// 添加poi-------------------------------------------------------------------------------------------------------------
+const dialogVisible = ref(false);
+const fileList = ref<UploadUserFile[]>([])
+const dialogImageUrl = ref('')
+const previewVisible = ref(false)
+const initForm: poiItem = {
+  code: '',
+  department: '',
+  latitude: 0,
+  level: '国家级',
+  locate: '',
+  longitude: 0,
+  name: '',
+  protectObject: '',
+  setTime: '',
+  size: 0,
+  type: '',
+  imageid: 0,
+};
+const dataForm = ref({
+  id: parseInt(localStorage.getItem("id") as string, 10),
+  latitude: props.point.lat,
+  longitude: props.point.lng,
 })
-onMounted(() => {
-  typeList.value = getAllTypes(props.showData)
-  departList.value = getAllDepartments(props.showData)
+const poiForm = ref<poiItem>(JSON.parse(JSON.stringify(initForm)))
+const add = () => {
+  console.log(dataForm)
+
+  fileList.value = []
+  poiForm.value = JSON.parse(JSON.stringify(initForm))
+  poiForm.value.locate = props.result
+  poiForm.value.longitude = props.point.lng
+  poiForm.value.latitude = props.point.lat
+  dialogVisible.value = true
+}
+const handleRemove: UploadProps['onRemove'] = (uploadFile, uploadFiles) => {
+  console.log(uploadFile, uploadFiles)
+}
+const handlePictureCardPreview: UploadProps['onPreview'] = (uploadFile) => {
+  dialogImageUrl.value = uploadFile.url!
+  previewVisible.value = true
+}
+const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
+  if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png' && rawFile.type !== 'image/bmp' && rawFile.type !== 'image/gif') {
+    ElMessage.error('上传的图片必须要是 JPG/PNG/BMP/GIF 格式!')
+    return false
+  }
+  return true
+}
+
+function handleSuccess(response: any) {
+  poiForm.value.imageid = response.data
+  request.post(`/secure/user/poi/add`, {
+    detailedData: poiForm.value,
+    location: props.point
+  })
+}
+
+const uploadRef = ref<UploadInstance>()
+const submitUpload = () => {
+  if(fileList.value.length > 0) {
+    console.log(fileList.value)
+    uploadRef.value!.submit()
+  }
+  else {
+    const requestBody = {
+      detailedData: poiForm.value,
+      location: props.point
+    }
+    request.post(`/secure/user/poi/add`, requestBody).then(res => {
+      if (res.data.code === '0') {
+        ElMessage({
+          type: 'success',
+          message: '添加成功',
+        })
+      } else {
+        ElMessage({
+          type: 'error',
+          message: res.data.msg,
+        })
+      }
+    })
+  }
+  dialogVisible.value = false
+}
+
+// 暴露给外面的接口----------------------------------------------------------------------------------------------------
+const reloadShow = () => {
+  if(!isSearch.value){
+    getPOI()
+  }
+  else if(!mode.value) {
+    getPoiByRad()
+  }
+  else {
+    searchPoi()
+  }
+}
+defineExpose({
+  reloadShow
 })
 </script>
 
