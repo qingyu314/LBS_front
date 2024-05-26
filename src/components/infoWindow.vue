@@ -24,6 +24,16 @@
     </el-button-group>
   </div>
   <div v-else>
+    <el-upload
+        v-if="imgUrl!==''"
+        class="avatar-uploader"
+        action="http://localhost:9091/secure/file/upload"
+        :show-file-list="false"
+        :on-success="handleAvatarSuccess"
+    >
+      <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+      <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+    </el-upload>
     <el-input v-model="tempPoi.name" />
     <el-input v-model="tempPoi.locate" />
     <el-input v-model="tempPoi.size" />
@@ -47,7 +57,7 @@ import type{poiItem} from "@/components/selectPoi.vue";
 import {ref, watch} from "vue";
 import {Delete, DocumentChecked, DocumentDelete, Edit} from "@element-plus/icons-vue"
 import request from "@/utils/request";
-import {ElMessage} from "element-plus";
+import {ElMessage, type UploadProps} from "element-plus";
 
 const props = defineProps<{
   showItem: poiItem
@@ -149,7 +159,18 @@ const getImgUrl = () => {
   }
 
 }
+// 上传图像----------------------------------------------------------
+const imageUrl = ref('')
+const handleAvatarSuccess: UploadProps['onSuccess'] = (
+    response,
+    uploadFile
+) => {
+  imageUrl.value = URL.createObjectURL(uploadFile.raw!)
+  props.showItem.imageid = response.data
+  saveEdit()
+}
 
+// ------------------------------------------------------------------------
 watch(()=>props.showItem, (newVal, oldVal) => {
   getImgUrl()
 },
@@ -158,5 +179,24 @@ watch(()=>props.showItem, (newVal, oldVal) => {
 </script>
 
 <style scoped>
+.avatar-uploader .el-upload {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+}
 
+.avatar-uploader .el-upload:hover {
+  border-color: var(--el-color-primary);
+}
+
+.el-icon.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
+}
 </style>
