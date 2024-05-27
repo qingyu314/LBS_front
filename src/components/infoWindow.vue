@@ -25,7 +25,7 @@
   </div>
   <div v-else>
     <el-upload
-        v-if="imgUrl!==''"
+        v-if="imgUrl==''"
         class="avatar-uploader"
         action="http://localhost:9091/secure/file/upload"
         :show-file-list="false"
