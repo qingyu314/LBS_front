@@ -407,9 +407,7 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
 function handleSuccess(response: any) {
   poiForm.value.imageid = response.data
   console.log(poiForm.value)
-  request.post(`/secure/user/poi/add`, {
-    detailedData: poiForm.value,
-  }).then(res => {
+  request.post(`/secure/user/poi/add`, poiForm.value).then(res => {
     if (res.data.code === '0') {
       ElMessage({
         type: 'success',
@@ -444,10 +442,11 @@ const submitUpload = () => {
           message: res.data.msg,
         })
       }
+      reloadShow()
     })
   }
   dialogVisible.value = false
-  reloadShow()
+
 }
 
 // 暴露给外面的接口----------------------------------------------------------------------------------------------------
