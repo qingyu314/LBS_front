@@ -1,5 +1,5 @@
 <template>
-  <img v-if="imgUrl!==''" :src="imgUrl" alt="extended information" w-full />
+  <img v-if="imgUrl!==''" :src="imgUrl" alt="extended information"/>
 <!--  这里你改改↑-->
   <div v-if="!isModify">
     <el-text>{{props.showItem.name}}</el-text>
@@ -138,18 +138,18 @@ const saveEdit = () => {
       ElMessage.success(res.data.msg);
     }
     isModify.value = false
-    // emit('reload')
+    emit('reload')
 
   })
 }
 
 // 获取图片-------------------------------------------------------------------------------------------------------------
 const imgUrl = ref<string>('')
-const getImgUrl = () => {
-  if(props.showItem.imageid != 0){
+const getImgUrl = (imageid: number) => {
+  if(imageid != 0){
     request.get('secure/file/image', {
       params: {
-        imageid: props.showItem.imageid
+        imageId: props.showItem.imageid
       },
       responseType: 'blob'
     }).then(res => {
@@ -166,13 +166,13 @@ const handleAvatarSuccess: UploadProps['onSuccess'] = (
     uploadFile
 ) => {
   imageUrl.value = URL.createObjectURL(uploadFile.raw!)
-  props.showItem.imageid = response.data
+  tempPoi.value.imageid = response.data
   saveEdit()
 }
 
 // ------------------------------------------------------------------------
 watch(()=>props.showItem, (newVal, oldVal) => {
-  getImgUrl()
+  getImgUrl(newVal.imageid)
 },
     {deep: true}
 )

@@ -43,6 +43,7 @@
               :position="infoPos"
               enableAutoPan
               enableCloseOnClick
+              class="post-container"
           >
             <!--渲染靠你了，麦子！-->
             <infoWindow v-model:showItem="showItem" @reload="handleReload"/>
