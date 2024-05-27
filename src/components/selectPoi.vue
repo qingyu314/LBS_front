@@ -406,10 +406,23 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
 
 function handleSuccess(response: any) {
   poiForm.value.imageid = response.data
+  console.log(poiForm.value)
   request.post(`/secure/user/poi/add`, {
     detailedData: poiForm.value,
-    location: props.point
+  }).then(res => {
+    if (res.data.code === '0') {
+      ElMessage({
+        type: 'success',
+        message: '添加成功',
+      })
+    } else {
+      ElMessage({
+        type: 'error',
+        message: res.data.msg,
+      })
+    }
   })
+  reloadShow()
 }
 
 const uploadRef = ref<UploadInstance>()
@@ -419,11 +432,7 @@ const submitUpload = () => {
     uploadRef.value!.submit()
   }
   else {
-    const requestBody = {
-      detailedData: poiForm.value,
-      location: props.point
-    }
-    request.post(`/secure/user/poi/add`, requestBody).then(res => {
+    request.post(`/secure/user/poi/add`, poiForm.value).then(res => {
       if (res.data.code === '0') {
         ElMessage({
           type: 'success',
@@ -438,6 +447,7 @@ const submitUpload = () => {
     })
   }
   dialogVisible.value = false
+  reloadShow()
 }
 
 // 暴露给外面的接口----------------------------------------------------------------------------------------------------
