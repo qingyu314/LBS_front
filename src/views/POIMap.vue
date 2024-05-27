@@ -1,10 +1,7 @@
 <template>
+    <selectPoi ref="reloadPoi" :point="point" :result="result?.address" @callbackShow="getPoi"/>
   <div style="display: flex">
-
     <div style="flex: 1">
-      <div>
-        <selectPoi ref="reloadPoi" :point="point" :result="result?.address" @callbackShow="getPoi"/>
-      </div>
       <BMap
           :center="{
         lng: 116.28019,
@@ -35,7 +32,6 @@
           </BMarker>
           <BInfoWindow
               v-model:show="showInfo"
-              :height="auto"
               :offset="{
                 x: 0,
                 y: -10
@@ -43,9 +39,7 @@
               :position="infoPos"
               enableAutoPan
               enableCloseOnClick
-              class="post-container"
           >
-            <!--渲染靠你了，麦子！-->
             <infoWindow v-model:showItem="showItem" @reload="handleReload"/>
           </BInfoWindow>
         </template>
@@ -126,13 +120,12 @@ const loadPoi = ref<boolean>(true)
 const getPoi = (data: poiItem[]) => {
   console.log('Received POI data:', data);
   showPoi.value = data; // 更新 poiData
-  if(data.length > 0) {
+  if (data.length > 0) {
     showItem.value = showPoi.value[0]
     infoPos.value = {lng: showPoi.value[0].longitude, lat: showPoi.value[0].latitude}
     loadPoi.value = false
     showInfo.value = true
-  }
-  else {
+  } else {
     showInfo.value = false
   }
 };

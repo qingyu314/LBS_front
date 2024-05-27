@@ -83,21 +83,28 @@ const router = createRouter({
     ]
 })
 
-// router.beforeEach((to, from, next) => {
-//     if (to.path === '/login' && localStorage.getItem('token')) {
-//         next('/map')
-//     }
-//     // 判断该路由是否需要登录权限
-//     if (to.meta.requireAuth) {
-//         // 该路由需要登录权限
-//         if (localStorage.getItem('token')) {
-//             // 已登录
-//             next()
-//         } else {
-//             next('/login')
-//         }
-//     } else {
-//         next()
-//     }
-// })
+router.beforeEach((to, from, next) => {
+    // const type = to.meta.type
+    // // 判断该路由是否需要登录权限
+    // if (to.meta.requireAuth) {
+    //     // 该路由需要登录权限
+    //     if (sessionStorage.getItem('token')) {
+    //         // 已登录
+    //         next()
+    //     } else {
+    //         next('/login')
+    //     }
+    // } else {
+    //     next()
+    // }
+    // 加了一个禁用/启用网页滚动的功能
+    if (to.path === '/poi' || to.path === '/map') {
+        document.body.style.overflow = 'hidden';
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0; // 针对不同浏览器的兼容性
+    } else {
+        document.body.style.overflow = 'auto'
+    }
+    next()
+})
 export default router

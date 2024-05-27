@@ -1,79 +1,88 @@
 <template>
-  <div style="flex-wrap: wrap">
+  <div style="margin:10px 20px;">
     <el-button-group>
       <el-button @click="() => getPOI()">获取所有信息</el-button>
       <el-button @click="add">添加POI(记得先标点)</el-button>
     </el-button-group>
   </div>
 
-  <el-radio-group v-model="mode">
+  <el-radio-group v-model="mode" style="margin-left: 20px">
     <el-radio :value="false" size="large">半径搜索</el-radio>
     <el-radio :value="true" size="large">关键字搜索</el-radio>
   </el-radio-group>
-  <div class="demo-date-picker">
+  <div v-if="!mode" class="demo-date-picker">
     <div style="width: 60%">
       <el-slider v-model="distance" :max="4000" :disabled="mode" show-input/>
     </div>
     <div style="margin-left: 30px">
       <el-button @click="()=>getPoiByRad()" :disabled="mode" :icon="Filter">查找</el-button>
+      <el-button @click="()=>getPoiByRad()" :disabled="mode" :icon="Filter">查找</el-button>
     </div>
   </div>
-  <div class="demo-date-picker">
-    <el-checkbox v-model="enableCode" :disabled="!mode"/>
-    <el-select
-        v-model="selectCode"
-        :disabled="!enableCode || !mode"
-        clearable
-        placeholder="选择省份"
-        style="width: 240px"
-    >
-      <el-option
-          v-for="item in provinces"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
+  <div v-else class="demo-date-picker">
+    <div>
+      <el-checkbox v-model="enableCode" :disabled="!mode"/>
+      <el-select
+          v-model="selectCode"
+          :disabled="!enableCode || !mode"
+          clearable
+          placeholder="选择省份"
+          style="width: 240px"
+      >
+        <el-option
+            v-for="item in provinces"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+        />
+      </el-select>
+    </div>
+    <div>
+      <el-checkbox v-model="enableType" :disabled="!mode"/>
+      <el-select
+          v-model="selectType"
+          :disabled="!enableType || !mode"
+          clearable
+          placeholder="选择类型"
+          style="width: 240px"
+      >
+        <el-option
+            v-for="item in typeList"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+        />
+      </el-select>
+    </div>
+    <div>
+      <el-checkbox v-model="enableDepart" :disabled="!mode"/>
+      <el-select
+          v-model="selectDepart"
+          :disabled="!enableDepart || !mode"
+          clearable
+          placeholder="选择所属系"
+          style="width: 240px"
+      >
+        <el-option
+            v-for="item in departList"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+        />
+      </el-select>
+    </div>
+    <div>
+      <el-checkbox v-model="enableDate" :disabled="!mode"/>
+      <el-date-picker
+          v-model="chosenDate"
+          :disabled="!enableDate || !mode"
+          format="YYYY/MM/DD"
+          placeholder="选择日期"
+          size="default"
+          type="date"
+          value-format="YYYYMMDD"
       />
-    </el-select>
-    <el-checkbox v-model="enableType" :disabled="!mode"/>
-    <el-select
-        v-model="selectType"
-        :disabled="!enableType || !mode"
-        clearable
-        placeholder="选择类型"
-        style="width: 240px"
-    >
-      <el-option
-          v-for="item in typeList"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
-      />
-    </el-select>
-    <el-checkbox v-model="enableDepart" :disabled="!mode"/>
-    <el-select
-        v-model="selectDepart"
-        :disabled="!enableDepart || !mode"
-        clearable
-        placeholder="选择所属系"
-        style="width: 240px"
-    >
-      <el-option
-          v-for="item in departList"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
-      />
-    </el-select>
-    <el-checkbox v-model="enableDate" :disabled="!mode"/>
-    <el-date-picker
-        v-model="chosenDate"
-        :disabled="!enableDate || !mode"
-        format="YYYY/MM/DD"
-        placeholder="Pick a day"
-        size="default"
-        type="date"
-        value-format="YYYYMMDD"
-    />
+    </div>
     <el-button @click="searchPoi" :disabled="!mode" :icon="Filter">查找</el-button>
 
     <el-dialog
@@ -83,19 +92,19 @@
     >
       <el-form :model="poiForm">
         <el-form-item label="code">
-          <el-input v-model="poiForm.code" />
+          <el-input v-model="poiForm.code"/>
         </el-form-item>
         <el-form-item label="name">
-          <el-input v-model="poiForm.name" />
+          <el-input v-model="poiForm.name"/>
         </el-form-item>
         <el-form-item label="locate">
-          <el-input v-model="poiForm.locate" disabled />
+          <el-input v-model="poiForm.locate" disabled/>
         </el-form-item>
         <el-form-item label="size">
-          <el-input-number v-model="poiForm.size" :precision="2" :step="0.1" />
+          <el-input-number v-model="poiForm.size" :precision="2" :step="0.1"/>
         </el-form-item>
         <el-form-item label="protectObject">
-          <el-input v-model="poiForm.protectObject" />
+          <el-input v-model="poiForm.protectObject"/>
         </el-form-item>
         <el-form-item label="type">
           <el-select
@@ -113,7 +122,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="level">
-          <el-input v-model="poiForm.level" disabled />
+          <el-input v-model="poiForm.level" disabled/>
         </el-form-item>
         <el-form-item label="setTime">
           <el-date-picker
@@ -142,13 +151,13 @@
         </el-form-item>
         <el-form-item label="coordinate(lng, lat)">
           <el-col :span="11">
-            <el-input v-model="poiForm.longitude" disabled />
+            <el-input v-model="poiForm.longitude" disabled/>
           </el-col>
           <el-col :span="2">
             <span>, </span>
           </el-col>
           <el-col :span="11">
-            <el-input v-model="poiForm.latitude" disabled />
+            <el-input v-model="poiForm.latitude" disabled/>
           </el-col>
         </el-form-item>
       </el-form>
@@ -224,7 +233,7 @@ const props = defineProps<{
   result: string
 }>()
 const emit = defineEmits(['callbackShow'])
-const poiData =  ref<poiItem[]>([])
+const poiData = ref<poiItem[]>([])
 const resPoi = ref<poiItem[]>([])
 const isSearch = ref(false)
 let authHeaders = {
@@ -258,6 +267,7 @@ const getPoiByRad = () => {
   emit('callbackShow', resPoi.value)
   isSearch.value = true
 }
+
 // 根据经纬度计算距离
 function calculateDistance(coord1: Point, coord2: Point): number {
   const R = 6371; // 地球半径（单位：公里）
@@ -425,11 +435,10 @@ function handleSuccess(response: any) {
 
 const uploadRef = ref<UploadInstance>()
 const submitUpload = () => {
-  if(fileList.value.length > 0) {
+  if (fileList.value.length > 0) {
     console.log(fileList.value)
     uploadRef.value!.submit()
-  }
-  else {
+  } else {
     request.post(`/secure/user/poi/add`, poiForm.value).then(res => {
       if (res.data.code === '0') {
         ElMessage({
@@ -451,13 +460,11 @@ const submitUpload = () => {
 
 // 暴露给外面的接口----------------------------------------------------------------------------------------------------
 const reloadShow = () => {
-  if(!isSearch.value){
+  if (!isSearch.value) {
     getPOI()
-  }
-  else if(!mode.value) {
+  } else if (!mode.value) {
     getPoiByRad()
-  }
-  else {
+  } else {
     searchPoi()
   }
 }
@@ -474,9 +481,12 @@ defineExpose({
 .demo-date-picker {
   display: flex;
   width: 100%;
-  padding: 0;
-  flex-wrap: wrap;
-  margin: 10px 0
+  margin: 10px 20px;
+  gap: 20px;
 }
 
+.demo-date-picker > div {
+  display: flex;
+  gap: 10px;
+}
 </style>
