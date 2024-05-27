@@ -61,7 +61,7 @@
           <Guide/>
         </el-icon>
         <template #title>
-          <span @click="router.push('/poi')">自然保护区</span>
+          <span @click="router.push('/poi')" style="cursor: pointer">自然保护区</span>
         </template>
       </el-menu-item>
     </el-menu>
