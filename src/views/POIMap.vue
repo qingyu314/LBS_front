@@ -119,12 +119,14 @@ const loadPoi = ref<boolean>(true)
 // 处理子组件selectPoi事件------------------------------------------------------------------------------------------------
 const getPoi = (data: poiItem[]) => {
   console.log('Received POI data:', data);
+  console.log('previous POI data', showPoi.value)
   showPoi.value = data; // 更新 poiData
   if (data.length > 0) {
-    showItem.value = showPoi.value[0]
+    showItem.value = showPoi.value[0];
     infoPos.value = {lng: showPoi.value[0].longitude, lat: showPoi.value[0].latitude}
     loadPoi.value = false
     showInfo.value = true
+
   } else {
     showInfo.value = false
   }

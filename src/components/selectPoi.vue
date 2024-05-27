@@ -2,7 +2,7 @@
   <div style="margin:10px 20px;">
     <el-button-group>
       <el-button @click="() => getPOI()">获取所有信息</el-button>
-      <el-button @click="add">添加POI(记得先标点)</el-button>
+      <el-button v-if="isAdmin()" @click="add">添加POI(记得先标点)</el-button>
     </el-button-group>
   </div>
 
@@ -15,8 +15,7 @@
       <el-slider v-model="distance" :max="4000" :disabled="mode" show-input/>
     </div>
     <div style="margin-left: 30px">
-      <el-button @click="()=>getPoiByRad()" :disabled="mode" :icon="Filter">查找</el-button>
-      <el-button @click="()=>getPoiByRad()" :disabled="mode" :icon="Filter">查找</el-button>
+      <el-button @click="()=>getPoiByRad(props.point)" :disabled="mode" :icon="Filter">半径查找</el-button>
     </div>
   </div>
   <div v-else class="demo-date-picker">
@@ -83,113 +82,114 @@
           value-format="YYYYMMDD"
       />
     </div>
-    <el-button @click="searchPoi" :disabled="!mode" :icon="Filter">查找</el-button>
+    <el-button @click="searchPoi" :disabled="!mode" :icon="Filter">关键字查找</el-button>
 
-    <el-dialog
-        v-model="dialogVisible"
-        title="上传贴图"
-        width="50%"
-    >
-      <el-form :model="poiForm">
-        <el-form-item label="code">
-          <el-input v-model="poiForm.code"/>
-        </el-form-item>
-        <el-form-item label="name">
-          <el-input v-model="poiForm.name"/>
-        </el-form-item>
-        <el-form-item label="locate">
-          <el-input v-model="poiForm.locate" disabled/>
-        </el-form-item>
-        <el-form-item label="size">
-          <el-input-number v-model="poiForm.size" :precision="2" :step="0.1"/>
-        </el-form-item>
-        <el-form-item label="protectObject">
-          <el-input v-model="poiForm.protectObject"/>
-        </el-form-item>
-        <el-form-item label="type">
-          <el-select
-              v-model="poiForm.type"
-              clearable
-              placeholder="选择类型"
-              style="width: 240px"
-          >
-            <el-option
-                v-for="item in typeList"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="level">
-          <el-input v-model="poiForm.level" disabled/>
-        </el-form-item>
-        <el-form-item label="setTime">
-          <el-date-picker
-              v-model="poiForm.setTime"
-              format="YYYY/MM/DD"
-              placeholder="Pick a day"
-              size="default"
-              type="date"
-              value-format="YYYYMMDD"
-          />
-        </el-form-item>
-        <el-form-item label="department">
-          <el-select
-              v-model="poiForm.department"
-              clearable
-              placeholder="选择所属系"
-              style="width: 240px"
-          >
-            <el-option
-                v-for="item in departList"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="coordinate(lng, lat)">
-          <el-col :span="11">
-            <el-input v-model="poiForm.longitude" disabled/>
-          </el-col>
-          <el-col :span="2">
-            <span>, </span>
-          </el-col>
-          <el-col :span="11">
-            <el-input v-model="poiForm.latitude" disabled/>
-          </el-col>
-        </el-form-item>
-      </el-form>
-      <el-upload
-          ref="uploadRef"
-          v-model:file-list="fileList"
-          :auto-upload="false"
-          :before-upload="beforeUpload"
-          :data="dataForm"
-          :headers="authHeaders"
-          :on-preview="handlePictureCardPreview"
-          :on-remove="handleRemove"
-          :on-success="handleSuccess"
-          action="http://localhost:9091/secure/file/upload"
-          drag="true"
-          list-type="picture-card"
-          :limit="1"
-      >
-        <el-icon>
-          <Plus/>
-        </el-icon>
-      </el-upload>
 
-      <el-dialog v-model="previewVisible">
-        <img :src="dialogImageUrl" alt="Preview Image" w-full/>
-      </el-dialog>
-      <template #footer>
-        <el-button style="width: 150px; height: 50px" type="primary" @click="submitUpload">上传</el-button>
-      </template>
-
-    </el-dialog>
   </div>
+  <el-dialog
+      v-model="dialogVisible"
+      title="上传贴图"
+      width="50%"
+  >
+    <el-form :model="poiForm">
+      <el-form-item label="code">
+        <el-input v-model="poiForm.code"/>
+      </el-form-item>
+      <el-form-item label="name">
+        <el-input v-model="poiForm.name"/>
+      </el-form-item>
+      <el-form-item label="locate">
+        <el-input v-model="poiForm.locate" disabled/>
+      </el-form-item>
+      <el-form-item label="size">
+        <el-input-number v-model="poiForm.size" :precision="2" :step="0.1"/>
+      </el-form-item>
+      <el-form-item label="protectObject">
+        <el-input v-model="poiForm.protectObject"/>
+      </el-form-item>
+      <el-form-item label="type">
+        <el-select
+            v-model="poiForm.type"
+            clearable
+            placeholder="选择类型"
+            style="width: 240px"
+        >
+          <el-option
+              v-for="item in typeList"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="level">
+        <el-input v-model="poiForm.level" disabled/>
+      </el-form-item>
+      <el-form-item label="setTime">
+        <el-date-picker
+            v-model="poiForm.setTime"
+            format="YYYY/MM/DD"
+            placeholder="Pick a day"
+            size="default"
+            type="date"
+            value-format="YYYYMMDD"
+        />
+      </el-form-item>
+      <el-form-item label="department">
+        <el-select
+            v-model="poiForm.department"
+            clearable
+            placeholder="选择所属系"
+            style="width: 240px"
+        >
+          <el-option
+              v-for="item in departList"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="coordinate(lng, lat)">
+        <el-col :span="11">
+          <el-input v-model="poiForm.longitude" disabled/>
+        </el-col>
+        <el-col :span="2">
+          <span>, </span>
+        </el-col>
+        <el-col :span="11">
+          <el-input v-model="poiForm.latitude" disabled/>
+        </el-col>
+      </el-form-item>
+    </el-form>
+    <el-upload
+        ref="uploadRef"
+        v-model:file-list="fileList"
+        :auto-upload="false"
+        :before-upload="beforeUpload"
+        :data="dataForm"
+        :headers="authHeaders"
+        :on-preview="handlePictureCardPreview"
+        :on-remove="handleRemove"
+        :on-success="handleSuccess"
+        action="http://localhost:9091/secure/file/upload"
+        drag="true"
+        list-type="picture-card"
+        :limit="1"
+    >
+      <el-icon>
+        <Plus/>
+      </el-icon>
+    </el-upload>
+
+    <el-dialog v-model="previewVisible">
+      <img :src="dialogImageUrl" alt="Preview Image" w-full/>
+    </el-dialog>
+    <template #footer>
+      <el-button style="width: 150px; height: 50px" type="primary" @click="submitUpload">上传</el-button>
+    </template>
+
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -203,10 +203,10 @@ const enableCode = ref(false)
 const enableType = ref(false)
 const enableDepart = ref(false)
 const enableDate = ref(false)
-const selectCode = ref<string>('')
-const selectType = ref<string>('')
-const selectDepart = ref<string>('')
-const chosenDate = ref<string>('')
+const selectCode = ref<string | undefined>('')
+const selectType = ref<string | undefined>('')
+const selectDepart = ref<string | undefined>('')
+const chosenDate = ref<string | undefined>('')
 
 export interface poiItem {
   code: string;
@@ -233,6 +233,10 @@ const props = defineProps<{
   result: string
 }>()
 const emit = defineEmits(['callbackShow'])
+const isAdmin = () => {
+  return parseInt(localStorage.getItem("id") as string, 10) == 1
+}
+
 const poiData = ref<poiItem[]>([])
 const resPoi = ref<poiItem[]>([])
 const isSearch = ref(false)
@@ -257,32 +261,25 @@ const getPOI = () => {
 const mode = ref<boolean>(false)
 // 根据半径查询-------------------------------------------------------------------------------------------------------
 const distance = ref<number>(100)
-const getPoiByRad = () => {
-  resPoi.value = poiData.value.filter(poi => calculateDistance(props.point, {
-    lat: poi.latitude,
-    lng: poi.longitude
-  }) <= distance.value);
-  console.log(resPoi.value)
+const prevPoint = ref<Point>({lng: 0, lat: 0})
+const getPoiByRad = (point: Point = props.point) => {
+  request.get('secure/user/getLocation', {
+    params:{
+      latitude: point.lat,
+      longitude: point.lng,
+      radius: distance.value * 1000
+    }
+  }).then((res) => {
+    console.log(res)
+    resPoi.value = res.data
+    prevPoint.value = JSON.parse(JSON.stringify(point))
+    isSearch.value = true
+    emit('callbackShow', resPoi.value)
+  })
 
-  emit('callbackShow', resPoi.value)
-  isSearch.value = true
+
 }
 
-// 根据经纬度计算距离
-function calculateDistance(coord1: Point, coord2: Point): number {
-  const R = 6371; // 地球半径（单位：公里）
-  const toRadians = (degree: number) => degree * (Math.PI / 180);
-
-  const dLat = toRadians(coord2.lat - coord1.lat);
-  const dLon = toRadians(coord2.lng - coord1.lng);
-
-  const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRadians(coord1.lat)) * Math.cos(toRadians(coord2.lat)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
 // 根据关键字选择------------------------------------------------------------------------------------------------------
 const provinces = [
@@ -349,18 +346,31 @@ function getAllDepartments(poiList: poiItem[]): { value: string, label: string }
 }
 
 const searchPoi = () => {
+  let code: string | undefined = selectCode.value
+  let type: string | undefined = selectType.value
+  let depart: string | undefined = selectDepart.value
+  let date: string | undefined = chosenDate.value
+  if(!enableCode.value)
+    code = undefined
+  if(!enableType.value)
+    type = undefined
+  if(!enableDepart.value)
+    depart = undefined
+  if(!enableDate.value)
+    date = undefined
   request.get(`/secure/user/poi/get`, {
     params: {
-      code: selectCode.value,
-      type: selectType.value,
-      department: selectDepart.value,
-      settime: chosenDate.value
+      code: code,
+      type: type,
+      department: depart,
+      settime: date
     }
   }).then(res => {
     resPoi.value = res.data;
     console.log(resPoi.value)
-    emit('callbackShow', resPoi.value)
     isSearch.value = true
+    emit('callbackShow', resPoi.value)
+
   })
 }
 
@@ -463,7 +473,7 @@ const reloadShow = () => {
   if (!isSearch.value) {
     getPOI()
   } else if (!mode.value) {
-    getPoiByRad()
+    getPoiByRad(prevPoint.value)
   } else {
     searchPoi()
   }

@@ -30,7 +30,8 @@
           drag
           :headers="authHeaders"
           action="http://localhost:9091/secure/file/upload"
-          :on-success="handleAvatarSuccess"
+          :on-success="handleSuccess"
+          :data="dataForm"
           class="upload-demo"
       >
         <el-icon class="el-icon--upload">
@@ -116,13 +117,13 @@ const delPoi = () => {
       })
     }
   }).then(() => {
-    if (props.showItem.imageid !== null || props.showItem.imageid != 0) {
+    if (props.showItem.imageid != 0) {
       request.delete(`/secure/file/image/delete`, {
         params: {
           imageId: props.showItem.imageid
         }
-      }).then(res => {
-        if (res.data.code === '0') {
+      }).then(res2 => {
+        if (res2.data.code === '0') {
           ElMessage({
             type: 'success',
             message: '图片删除成功',
@@ -130,7 +131,7 @@ const delPoi = () => {
         } else {
           ElMessage({
             type: 'error',
-            message: res.data.msg,
+            message: res2.data.msg,
           })
         }
       })
@@ -157,9 +158,7 @@ const discardEdit = () => {
 const saveEdit = () => {
   debugger
   request.post(`/secure/user/poi/dataupdate`, tempPoi.value).then(res => {
-    if (res.data.code === '403') {
-      ElMessage.error(res.data.code + res.data.msg);
-    } else if (res.data.code === '404') {
+    if (res.data.code === '403' || res.data.code === '404') {
       ElMessage.error(res.data.code + res.data.msg);
     } else {
       ElMessage.success(res.data.msg);
@@ -189,12 +188,17 @@ const getImgUrl = (imageid: number) => {
 
 }
 // 上传图像----------------------------------------------------------
-const imageUrl = ref('')
-const handleAvatarSuccess: UploadProps['onSuccess'] = (
+const dataForm = ref({
+  id: parseInt(localStorage.getItem("id") as string, 10),
+  latitude: props.showItem.latitude,
+  longitude: props.showItem.longitude,
+})
+const uploadUrl = ref('')
+const handleSuccess: UploadProps['onSuccess'] = (
     response,
     uploadFile
 ) => {
-  imageUrl.value = URL.createObjectURL(uploadFile.raw!)
+  uploadUrl.value = URL.createObjectURL(uploadFile.raw!)
   tempPoi.value.imageid = response.data
   saveEdit()
 }
