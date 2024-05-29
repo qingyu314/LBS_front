@@ -6,6 +6,7 @@ import Header from "@/components/Header.vue";
 import UserDetail from "@/views/UserDetail.vue";
 import POIMap from "@/views/POIMap.vue";
 import Convert from "@/views/Convert.vue";
+import testDraw from "@/views/testDraw.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -65,6 +66,14 @@ const router = createRouter({
             meta: {
                 requireAuth: false // 不需要鉴权
             }
+        },
+        {
+            path:'/testDraw',
+            component: testDraw,
+            meta: {
+                requireAuth: false
+            }
+
         },
         {
             path:'/:pathMatch(.*)*',

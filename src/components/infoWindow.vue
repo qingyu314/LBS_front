@@ -30,6 +30,7 @@
           drag
           :headers="authHeaders"
           action="http://localhost:9091/secure/file/upload"
+          :before-upload="handleUpload"
           :on-success="handleSuccess"
           :data="dataForm"
           class="upload-demo"
@@ -194,6 +195,11 @@ const dataForm = ref({
   longitude: props.showItem.longitude,
 })
 const uploadUrl = ref('')
+
+const handleUpload = () => {
+  dataForm.value.latitude = props.showItem.latitude
+  dataForm.value.longitude = props.showItem.longitude
+}
 const handleSuccess: UploadProps['onSuccess'] = (
     response,
     uploadFile

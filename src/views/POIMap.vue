@@ -1,5 +1,12 @@
 <template>
-    <selectPoi ref="reloadPoi" :point="point" :result="result?.address" @callbackShow="getPoi"/>
+    <selectPoi
+        ref="reloadPoi"
+        :point="point"
+        :result="result?.address"
+        :rectangle="rectangle"
+        @callbackShow="getPoi"
+        @draw-rectangle="handleDraw"
+    />
   <div style="display: flex">
     <div style="flex: 1">
       <BMap
@@ -7,9 +14,7 @@
         lng: 116.28019,
         lat: 40.049191
       }"
-          :heading="0"
           :minZoom="3"
-          :tilt="0"
           :zoom="5"
           enableContinuousZoom
           enableDoubleClickZoom
@@ -20,7 +25,9 @@
           height="95vh"
           v-bind="$attrs"
 
+          @initd="handleInitd"
           @click="handleClick"
+          
       >
         <template v-if="!loadPoi">
           <BMarker
@@ -46,7 +53,7 @@
 
 
         <template v-if="!isLoading && !isEmpty">
-          <BMarker :position="point"></BMarker>
+          <BMarker :position="point" :icon="'loc_blue'"></BMarker>
           <BLabel
               :content="`地址: ${result?.address} 所属商圈:${result?.business} 最匹配地点: ${
             result?.surroundingPois[0]?.title || '无'
@@ -71,7 +78,7 @@ import {
   type Point, type PointGeocoderResult,
   usePointGeocoder
 } from "vue3-baidu-map-gl";
-import {ref, watch} from "vue";
+import {ref, watch, nextTick} from "vue";
 import SelectPoi, {type poiItem} from "@/components/selectPoi.vue";
 import InfoWindow from "@/components/infoWindow.vue";
 
@@ -83,13 +90,64 @@ const {get: getGeo, result, isLoading, isEmpty} = usePointGeocoder<PointGeocoder
 // 点击地图---------------------------------------------------------------------------------------------------------------
 const point = ref({lng: 116.30793520652882, lat: 40.05861561613348})
 const showMarker = ref<boolean>(false);
+let rectangle = ref({
+  instance: null,
+  isDrawing: false,
+  toggle() {
+    let _rectangle = rectangle.value
+    _rectangle.isDrawing ? _rectangle.instance.closeAll() : _rectangle.instance.open()
+    _rectangle.isDrawing = !_rectangle.isDrawing
+  }
+})
+let clearFn = ref()
+function handleInitd({ map, BMapGL }) {
+  import('bmap-draw').then(({ DrawScene, RectDraw }) => {
+    const scene = new DrawScene(map,
+        {
+          noLimit: true
+        })
+    clearFn.value = () => scene.clearData()
+    // 矩形绘制
+    rectangle.value.instance = new RectDraw(scene, {
+      hideTip: true, // 隐藏绘制提示
+      isOpen: false,
+      isSeries: false, // 是否开启批量绘制
+      labelOptions: {
+        borderRadius: '2px',
+        background: '#b5d3fb',
+        border: '1px solid #b5d3fb',
+        color: '#333',
+        fontSize: '12px',
+        letterSpacing: '0',
+        padding: '5px'
+      },
+      baseOpts: {
+        fillColor: '#fff',
+        strokeWeight: 5,
+        strokeOpacity: 1,
+        fillOpacity: 0.2
+      }
+    });
+  })
+}
 
 function handleClick(e) {
   point.value = e.latlng
   showMarker.value = true
   getGeo(e.latlng)
+  if(rectangle.value.instance.startPoint != null && enableDraw)
+    nextTick(() => {
+      reloadPoi.value.getRectPoint(rectangle.value.instance.startPoint, point.value)
+    })
+
 }
 
+// function handleMouseUp() {
+//   if(rectangle.value.instance.startPoint != null && enableDraw)
+//     nextTick(() => {
+//       reloadPoi.value.getRectPoint(rectangle.value.instance.startPoint, point.value)
+//     })
+// }
 // 点击标点--------------------------------------------------------------------------------------------------------
 function clickDot(item: poiItem, event: MouseEvent) {
   event.stopPropagation()
@@ -132,11 +190,20 @@ const getPoi = (data: poiItem[]) => {
   }
 };
 
+// 处理绘图
+let enableDraw = false
+const handleDraw = () => {
+  enableDraw = true
+  clearFn.value()
+  rectangle.value.toggle()
+}
 const reloadPoi = ref()
 //处理子组件infoWindow事件------------------------------------------------------------------------------------------
 const handleReload = () => {
   reloadPoi.value.reloadShow()
 }
+
+
 </script>
 
 <style scoped>

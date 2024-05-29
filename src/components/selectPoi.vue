@@ -7,15 +7,34 @@
   </div>
 
   <el-radio-group v-model="mode" style="margin-left: 20px">
-    <el-radio :value="false" size="large">半径搜索</el-radio>
+    <el-radio :value="false" size="large">半径/拉框搜索</el-radio>
     <el-radio :value="true" size="large">关键字搜索</el-radio>
   </el-radio-group>
   <div v-if="!mode" class="demo-date-picker">
-    <div style="width: 60%">
+    <div style="flex-wrap: wrap; display: block;">
+      <el-radio-group v-model="graph" style="margin-left: 20px ">
+        <el-radio :value="true" size="large">半径搜索</el-radio>
+        <el-radio :value="false" size="large">拉框搜索</el-radio>
+      </el-radio-group>
+    </div>
+
+    <div v-if="graph" style="width: 60%">
       <el-slider v-model="distance" :max="4000" :disabled="mode" show-input/>
     </div>
     <div style="margin-left: 30px">
-      <el-button @click="()=>getPoiByRad(props.point)" :disabled="mode" :icon="Filter">半径查找</el-button>
+
+      <el-button v-if="graph" @click="()=>getPoiByRad(props.point)" :disabled="mode" :icon="Filter">半径查找</el-button>
+
+      <el-button-group v-else>
+        <el-button v-if="!rectangle.isDrawing" @click="()=>emit('drawRectangle')" :disabled="mode" :icon="Filter">
+          拉框查找(矩形)
+        </el-button>
+        <el-button v-else @click="()=>emit('drawRectangle')" :disabled="mode" :icon="Filter">
+          禁用拉框
+        </el-button>
+      </el-button-group>
+
+
     </div>
   </div>
   <div v-else class="demo-date-picker">
@@ -230,9 +249,10 @@ interface Option {
 
 const props = defineProps<{
   point: Point,
-  result: string
+  result: string,
+  rectangle: any
 }>()
-const emit = defineEmits(['callbackShow'])
+const emit = defineEmits(['callbackShow', 'drawRectangle', 'clearFn'])
 const isAdmin = () => {
   return parseInt(localStorage.getItem("id") as string, 10) == 1
 }
@@ -259,6 +279,7 @@ const getPOI = () => {
 };
 // 选择模式-----------------------------------------------------------------------------------------------------------
 const mode = ref<boolean>(false)
+const graph = ref<boolean>(true)  // true对应圆，false对应矩形
 // 根据半径查询-------------------------------------------------------------------------------------------------------
 const distance = ref<number>(100)
 const prevPoint = ref<Point>({lng: 0, lat: 0})
@@ -274,12 +295,34 @@ const getPoiByRad = (point: Point = props.point) => {
     resPoi.value = res.data
     prevPoint.value = JSON.parse(JSON.stringify(point))
     isSearch.value = true
+    graph.value = true
     emit('callbackShow', resPoi.value)
   })
 
 
 }
-
+// 矩形框查询------------------------------------------------------------------------------------------------------
+const startPoint = ref<Point>({lng: 0, lat: 0})
+const endPoint = ref<Point>({lng: 0, lat: 0})
+const getDotByRect = (startpoint: Point | undefined, endpoint: Point | undefined) => {
+  if(endpoint == undefined || startpoint == undefined) {return}
+  request.get(`/secure/user/poi/getRect`, {
+    params:{
+      startLng: startpoint.lng,
+      startLat: startpoint.lat,
+      endLng: endpoint.lng,
+      endLat: endpoint.lat
+    }
+  }).then(res => {
+    console.log(res)
+    resPoi.value = res.data
+    startPoint.value = JSON.parse(JSON.stringify(startpoint))
+    endPoint.value = JSON.parse(JSON.stringify(endpoint))
+    isSearch.value = true
+    graph.value = false
+    emit('callbackShow', resPoi.value)
+  })
+}
 
 // 根据关键字选择------------------------------------------------------------------------------------------------------
 const provinces = [
@@ -447,6 +490,8 @@ const uploadRef = ref<UploadInstance>()
 const submitUpload = () => {
   if (fileList.value.length > 0) {
     console.log(fileList.value)
+      dataForm.value.latitude = props.point.lat
+      dataForm.value.longitude = props.point.lng
     uploadRef.value!.submit()
   } else {
     request.post(`/secure/user/poi/add`, poiForm.value).then(res => {
@@ -473,13 +518,28 @@ const reloadShow = () => {
   if (!isSearch.value) {
     getPOI()
   } else if (!mode.value) {
-    getPoiByRad(prevPoint.value)
+    if(graph.value)
+      getPoiByRad(prevPoint.value)
+    else
+      getDotByRect(startPoint.value, endPoint.value)
   } else {
     searchPoi()
   }
 }
+
+const getRectPoint = (startP: Point | undefined, endP: Point | undefined) => {
+  const tempStart = (startP == undefined) ? {lng: 0, lat: 0} : startP;
+  const tempEnd = (endP == undefined) ? {lng: 0, lat: 0} : endP;
+  if(startPoint.value.lng != tempStart.lng || startPoint.value.lat != tempStart.lat ||
+      endPoint.value.lng != tempEnd.lng || endPoint.value.lat != tempEnd.lat){
+    console.log(tempStart)
+    console.log(tempEnd)
+    getDotByRect(tempStart, tempEnd)
+  }
+}
 defineExpose({
-  reloadShow
+  reloadShow,
+  getRectPoint,
 })
 </script>
 
