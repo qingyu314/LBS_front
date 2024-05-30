@@ -24,10 +24,8 @@
           enableScrollWheelZoom
           height="95vh"
           v-bind="$attrs"
-
           @initd="handleInitd"
           @click="handleClick"
-          
       >
         <template v-if="!loadPoi">
           <BMarker
@@ -50,8 +48,6 @@
             <infoWindow v-model:showItem="showItem" @reload="handleReload"/>
           </BInfoWindow>
         </template>
-
-
         <template v-if="!isLoading && !isEmpty">
           <BMarker :position="point" :icon="'loc_blue'"></BMarker>
           <BLabel
@@ -62,7 +58,6 @@
               style="color: #333; font-size: 9px"
           />
         </template>
-
       </BMap>
     </div>
   </div>
@@ -130,16 +125,22 @@ function handleInitd({ map, BMapGL }) {
     });
   })
 }
-
+let pointS = null;
 function handleClick(e) {
   point.value = e.latlng
   showMarker.value = true
   getGeo(e.latlng)
-  if(rectangle.value.instance.startPoint != null && enableDraw)
+  if(rectangle.value.instance.startPoint != null
+      && pointS?.lat != rectangle.value.instance.startPoint.lat
+      && pointS?.lng != rectangle.value.instance.startPoint.lng
+      && enableDraw) {
+    pointS = rectangle.value.instance.startPoint;
     nextTick(() => {
+      console.log(pointS)
+      console.log(rectangle.value.instance.startPoint)
       reloadPoi.value.getRectPoint(rectangle.value.instance.startPoint, point.value)
     })
-
+  }
 }
 
 // function handleMouseUp() {
